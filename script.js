@@ -222,10 +222,18 @@ if (isHomePage) {
     testimonials.id = 'depoimentos';
     testimonials.innerHTML = `
       <div class="container testimonials-copy">
-        <div class="testimonials-heading testimonials-heading-simple">
+        <div class="testimonials-heading testimonials-heading-with-rating">
           <div>
             <h2>O que nossos clientes estão dizendo</h2>
           </div>
+          <a class="google-rating-card" href="https://share.google/SitJRnFjLbQgVjWGU" target="_blank" rel="noopener noreferrer" aria-label="Ver avaliações do Despachante Pastor no Google">
+            <strong>Excelente 4.9/5</strong>
+            <div class="google-rating-stars" aria-label="4,9 de 5 estrelas">★★★★★</div>
+            <span>Com base em <b>489 avaliações</b></span>
+            <div class="google-wordmark" aria-label="Google">
+              <i class="g-blue">G</i><i class="g-red">o</i><i class="g-yellow">o</i><i class="g-blue">g</i><i class="g-green">l</i><i class="g-red">e</i>
+            </div>
+          </a>
         </div>
       </div>
       <div class="testimonial-marquee" aria-label="Avaliações de clientes">
