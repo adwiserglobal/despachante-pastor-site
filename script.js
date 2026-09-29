@@ -193,49 +193,40 @@ if (isHomePage) {
     testimonials.id = 'depoimentos';
     testimonials.innerHTML = `
       <div class="container">
-        <div class="testimonials-heading">
+        <div class="testimonials-heading testimonials-heading-simple">
           <div>
             <span class="section-kicker gold">DEPOIMENTOS</span>
-            <h2>O que clientes já disseram sobre o Despachante Pastor.</h2>
+            <h2>O que nossos clientes dizem.</h2>
+            <p class="testimonials-intro">Exemplos de feedback sobre a experiência de atendimento do Despachante Pastor.</p>
           </div>
-          <a class="review-source" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html" target="_blank" rel="noopener noreferrer"><strong>4 avaliações públicas</strong> no Apontador ↗</a>
         </div>
         <div class="testimonial-grid">
           <article class="testimonial-card">
-            <div class="testimonial-top">
-              <div class="testimonial-avatar-wrap">
-                <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160&q=80" alt="Retrato ilustrativo" loading="lazy">
-                <span class="illustrative-badge">foto ilustrativa</span>
-              </div>
-              <div class="testimonial-person"><strong>Euclides B.</strong><small>Avaliação pública · Apontador</small></div>
+            <div class="testimonial-person testimonial-person-no-photo">
+              <strong>Cliente de Santo André</strong>
+              <small>Serviço veicular</small>
             </div>
             <div class="testimonial-stars">★★★★★</div>
-            <blockquote>Cliente de longa data que destacou a qualidade do atendimento e a confiança construída ao longo dos anos.</blockquote>
-            <a class="testimonial-source-link" target="_blank" rel="noopener noreferrer" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html">Ver fonte da avaliação ↗</a>
+            <blockquote>“Atendimento muito atencioso e rápido. Me explicaram cada etapa com clareza e consegui resolver a documentação sem dor de cabeça.”</blockquote>
+            <span class="testimonial-mock-label">Depoimento ilustrativo</span>
           </article>
           <article class="testimonial-card">
-            <div class="testimonial-top">
-              <div class="testimonial-avatar-wrap">
-                <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=80" alt="Retrato ilustrativo" loading="lazy">
-                <span class="illustrative-badge">foto ilustrativa</span>
-              </div>
-              <div class="testimonial-person"><strong>Jose Luiz Bassetto</strong><small>Avaliação pública · Apontador</small></div>
+            <div class="testimonial-person testimonial-person-no-photo">
+              <strong>Cliente do ABC Paulista</strong>
+              <small>Transferência de veículo</small>
             </div>
             <div class="testimonial-stars">★★★★★</div>
-            <blockquote>Elogiou a equipe e relatou confiança no Despachante Pastor para cuidar da documentação de veículos.</blockquote>
-            <a class="testimonial-source-link" target="_blank" rel="noopener noreferrer" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html">Ver fonte da avaliação ↗</a>
+            <blockquote>“Eu estava com receio por não entender o processo, mas fui orientado do começo ao fim. Atendimento profissional e sem enrolação.”</blockquote>
+            <span class="testimonial-mock-label">Depoimento ilustrativo</span>
           </article>
           <article class="testimonial-card">
-            <div class="testimonial-top">
-              <div class="testimonial-avatar-wrap">
-                <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&h=160&q=80" alt="Retrato ilustrativo" loading="lazy">
-                <span class="illustrative-badge">foto ilustrativa</span>
-              </div>
-              <div class="testimonial-person"><strong>Nilson Aguiar</strong><small>Avaliação pública · Apontador</small></div>
+            <div class="testimonial-person testimonial-person-no-photo">
+              <strong>Cliente atendido</strong>
+              <small>Regularização documental</small>
             </div>
             <div class="testimonial-stars">★★★★★</div>
-            <blockquote>Registrou uma avaliação muito positiva sobre o atendimento do Despachante Pastor em Santo André.</blockquote>
-            <a class="testimonial-source-link" target="_blank" rel="noopener noreferrer" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html">Ver fonte da avaliação ↗</a>
+            <blockquote>“Resolveram tudo com muita agilidade e sempre me mantiveram informado. Foi muito mais simples do que eu imaginava.”</blockquote>
+            <span class="testimonial-mock-label">Depoimento ilustrativo</span>
           </article>
         </div>
       </div>
