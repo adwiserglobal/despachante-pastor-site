@@ -149,6 +149,10 @@
   grid-template-columns: 1fr;
 }
 
+.testimonials-heading .section-kicker {
+  display: none;
+}
+
 .testimonials-heading h2 {
   margin: 8px 0 0;
   max-width: 800px;
@@ -244,6 +248,20 @@
   line-height: 1.72;
 }
 
+.testimonials-section::after {
+  content: "Conteúdo demonstrativo — substitua por avaliações reais antes da publicação final.";
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  width: min(92%, 1180px);
+  color: rgba(255,255,255,.28);
+  font-size: 9px;
+  letter-spacing: .03em;
+  text-align: center;
+}
+
 @keyframes testimonialScroll {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-50%, 0, 0); }
@@ -271,6 +289,7 @@
   .laurel-right { right: -46px; }
   .testimonial-card { flex-basis: 82vw; min-height: 250px; padding: 22px; }
   .testimonial-track { animation-duration: 135s; }
+  .testimonials-section::after { bottom: 12px; font-size: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
