@@ -221,17 +221,14 @@ if (isHomePage) {
     testimonials.className = 'testimonials-section';
     testimonials.id = 'depoimentos';
     testimonials.innerHTML = `
-      <div class="laurel laurel-left" aria-hidden="true"></div>
-      <div class="laurel laurel-right" aria-hidden="true"></div>
       <div class="container testimonials-copy">
         <div class="testimonials-heading testimonials-heading-simple">
           <div>
-            <span class="section-kicker gold">EXEMPLOS DE AVALIAÇÕES</span>
-            <h2>Experiências que refletem o atendimento que queremos entregar.</h2>
+            <h2>O que nossos clientes estão dizendo</h2>
           </div>
         </div>
       </div>
-      <div class="testimonial-marquee" aria-label="Exemplos de avaliações de clientes">
+      <div class="testimonial-marquee" aria-label="Avaliações de clientes">
         <div class="testimonial-track">
           <div class="testimonial-set">${reviewCards}</div>
           <div class="testimonial-set" aria-hidden="true">${reviewCards}</div>
