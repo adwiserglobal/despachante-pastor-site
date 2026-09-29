@@ -1,0 +1,12 @@
+.hero-strip {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  translate: 0 50%;
+}
+
+@media (max-width: 980px) {
+  .hero-strip {
+    translate: 0 50%;
+  }
+}
