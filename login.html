@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071b3a" />
+    <meta name="description" content="Entre ou crie sua conta no Despachante Pastor para continuar sua solicitação de visto." />
+    <title>Entrar | Despachante Pastor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./portal.css" />
+  </head>
+  <body class="auth-page">
+    <main class="auth-shell">
+      <section class="auth-brand-panel">
+        <a class="auth-brand" href="./index.html" aria-label="Voltar para o site">
+          <span class="brand-mark"><img src="./assets/logo.png" alt="Logo Despachante Pastor" /></span>
+          <span class="brand-copy"><strong>Despachante Pastor</strong><small>Assessoria documental</small></span>
+        </a>
+
+        <div class="auth-brand-copy">
+          <span class="kicker">Área segura do cliente</span>
+          <h1>Seu processo continua <span>daqui.</span></h1>
+          <p>Crie seu acesso ou entre na sua conta para preencher o formulário do visto americano e salvar seu progresso com segurança.</p>
+        </div>
+
+        <div class="auth-brand-footer">Acesso protegido e dados vinculados à sua conta.</div>
+      </section>
+
+      <section class="auth-form-panel">
+        <div class="auth-card">
+          <a class="auth-back" href="./vistos.html">← Voltar para Vistos</a>
+          <h2 id="auth-title">Entre na sua conta</h2>
+          <p id="auth-subtitle">Entre para continuar exatamente de onde você parou.</p>
+
+          <div class="auth-tabs" role="tablist" aria-label="Entrar ou criar conta">
+            <button class="auth-tab active" data-mode="login" type="button">Entrar</button>
+            <button class="auth-tab" data-mode="signup" type="button">Criar conta</button>
+          </div>
+
+          <form id="auth-form" class="auth-form">
+            <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
+
+            <div class="field-group" id="name-group" hidden>
+              <label for="full-name">Nome completo</label>
+              <input id="full-name" name="full_name" type="text" autocomplete="name" placeholder="Seu nome completo" />
+            </div>
+
+            <div class="field-group">
+              <label for="email">E-mail</label>
+              <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com" required />
+            </div>
+
+            <div class="field-group">
+              <label for="password">Senha</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Mínimo de 6 caracteres" minlength="6" required />
+            </div>
+
+            <button id="auth-submit" class="button button-gold button-large auth-submit" type="submit">Entrar e continuar</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-client.js"></script>
+    <script src="./auth.js"></script>
+  </body>
+</html>
