@@ -3,6 +3,11 @@ enhancementStyles.rel = 'stylesheet';
 enhancementStyles.href = './enhancements.css';
 document.head.appendChild(enhancementStyles);
 
+const homeV2Styles = document.createElement('link');
+homeV2Styles.rel = 'stylesheet';
+homeV2Styles.href = './home-v2.css';
+document.head.appendChild(homeV2Styles);
+
 const menuButton = document.querySelector('.menu-toggle');
 const mobileMenu = document.querySelector('.mobile-menu');
 
@@ -55,8 +60,6 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
 const year = document.querySelector('#year');
 if (year) year.textContent = new Date().getFullYear();
 
-// Configura o número completo com DDI + DDD + número no atributo data-whatsapp
-// do botão em index.html. Ex.: data-whatsapp="5511999999999".
 const whatsappButton = document.querySelector('.whatsapp-placeholder');
 if (whatsappButton) {
   const phone = (whatsappButton.dataset.whatsapp || '').replace(/\D/g, '');
@@ -70,9 +73,7 @@ if (whatsappButton) {
   }
 }
 
-// Melhorias do site institucional: remove a antiga label do hero,
-// adiciona a página de Vistos à navegação e inclui a localização física.
-const isHomePage = !/vistos\.html$/i.test(window.location.pathname);
+const isHomePage = !/vistos\.html$/i.test(window.location.pathname) && !/login\.html$/i.test(window.location.pathname) && !/visa-eua\.html$/i.test(window.location.pathname);
 
 if (isHomePage) {
   document.querySelector('.eyebrow')?.remove();
@@ -101,6 +102,148 @@ if (isHomePage) {
       }
     }
   });
+
+  const heroVisual = document.querySelector('.hero-visual');
+  if (heroVisual) {
+    heroVisual.classList.add('quote-visual');
+    heroVisual.removeAttribute('aria-hidden');
+    heroVisual.innerHTML = `
+      <div class="quote-panel">
+        <span class="quote-kicker">Orçamento rápido</span>
+        <h2>Preencha os dados abaixo e resolvemos para você.</h2>
+        <p>Envie as informações principais. A equipe entra em contato para entender o serviço e orientar os próximos passos.</p>
+        <form class="quote-form" id="quote-form" novalidate>
+          <div class="quote-row">
+            <label class="quote-field"><input name="name" type="text" placeholder="Seu nome" autocomplete="name" required></label>
+            <label class="quote-field"><input name="email" type="email" placeholder="Seu e-mail" autocomplete="email" required></label>
+          </div>
+          <label class="quote-field"><input name="phone" type="tel" placeholder="Seu telefone com DDD" autocomplete="tel" required></label>
+          <label class="quote-field"><input name="vehicle_plate" type="text" placeholder="Placa do veículo (opcional)" autocomplete="off" maxlength="10"></label>
+          <label class="quote-field">
+            <select name="service">
+              <option value="">Qual serviço você precisa? (opcional)</option>
+              <option value="documentacao-veicular">Documentação veicular</option>
+              <option value="transferencia">Transferência de veículo</option>
+              <option value="regularizacao">Regularização</option>
+              <option value="vistos">Vistos e serviços internacionais</option>
+              <option value="outro">Outro serviço</option>
+            </select>
+          </label>
+          <button class="button button-gold quote-submit" type="submit">Solicitar orçamento <span aria-hidden="true">↗</span></button>
+          <div class="quote-status" id="quote-status" role="status" aria-live="polite"></div>
+          <div class="quote-note"><span aria-hidden="true">⌁</span> Seus dados serão usados apenas para retorno do atendimento.</div>
+        </form>
+      </div>
+    `;
+
+    const quoteForm = document.querySelector('#quote-form');
+    const quoteStatus = document.querySelector('#quote-status');
+    quoteForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = quoteForm.querySelector('button[type="submit"]');
+      const data = new FormData(quoteForm);
+      const payload = {
+        name: String(data.get('name') || '').trim(),
+        email: String(data.get('email') || '').trim(),
+        phone: String(data.get('phone') || '').trim(),
+        vehicle_plate: String(data.get('vehicle_plate') || '').trim() || null,
+        service: String(data.get('service') || '').trim() || null,
+      };
+
+      if (!payload.name || !payload.email || !payload.phone) {
+        quoteStatus.className = 'quote-status show error';
+        quoteStatus.textContent = 'Preencha nome, e-mail e telefone para solicitar o orçamento.';
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Enviando...';
+      quoteStatus.className = 'quote-status';
+
+      try {
+        const response = await fetch('https://bzjxwrcefctxzxhmxtcd.supabase.co/rest/v1/quote_requests', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': 'sb_publishable_f6hfMTA-VAJnHP7PV9mkCg_KxdtsawR',
+            'Authorization': 'Bearer sb_publishable_f6hfMTA-VAJnHP7PV9mkCg_KxdtsawR',
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        quoteForm.reset();
+        quoteStatus.className = 'quote-status show success';
+        quoteStatus.textContent = 'Solicitação enviada. A equipe do Despachante Pastor entrará em contato com você.';
+      } catch (error) {
+        console.error('Falha ao enviar orçamento:', error);
+        quoteStatus.className = 'quote-status show error';
+        quoteStatus.textContent = 'Não foi possível enviar agora. Tente novamente em alguns instantes.';
+      } finally {
+        button.disabled = false;
+        button.innerHTML = 'Solicitar orçamento <span aria-hidden="true">↗</span>';
+      }
+    });
+  }
+
+  const processSection = document.querySelector('.process-section');
+  if (processSection && !document.querySelector('#depoimentos')) {
+    const testimonials = document.createElement('section');
+    testimonials.className = 'testimonials-section';
+    testimonials.id = 'depoimentos';
+    testimonials.innerHTML = `
+      <div class="container">
+        <div class="testimonials-heading">
+          <div>
+            <span class="section-kicker gold">DEPOIMENTOS</span>
+            <h2>O que clientes já disseram sobre o Despachante Pastor.</h2>
+          </div>
+          <a class="review-source" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html" target="_blank" rel="noopener noreferrer"><strong>4 avaliações públicas</strong> no Apontador ↗</a>
+        </div>
+        <div class="testimonial-grid">
+          <article class="testimonial-card">
+            <div class="testimonial-top">
+              <div class="testimonial-avatar-wrap">
+                <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160&q=80" alt="Retrato ilustrativo" loading="lazy">
+                <span class="illustrative-badge">foto ilustrativa</span>
+              </div>
+              <div class="testimonial-person"><strong>Euclides B.</strong><small>Avaliação pública · Apontador</small></div>
+            </div>
+            <div class="testimonial-stars">★★★★★</div>
+            <blockquote>Cliente de longa data que destacou a qualidade do atendimento e a confiança construída ao longo dos anos.</blockquote>
+            <a class="testimonial-source-link" target="_blank" rel="noopener noreferrer" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html">Ver fonte da avaliação ↗</a>
+          </article>
+          <article class="testimonial-card">
+            <div class="testimonial-top">
+              <div class="testimonial-avatar-wrap">
+                <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=80" alt="Retrato ilustrativo" loading="lazy">
+                <span class="illustrative-badge">foto ilustrativa</span>
+              </div>
+              <div class="testimonial-person"><strong>Jose Luiz Bassetto</strong><small>Avaliação pública · Apontador</small></div>
+            </div>
+            <div class="testimonial-stars">★★★★★</div>
+            <blockquote>Elogiou a equipe e relatou confiança no Despachante Pastor para cuidar da documentação de veículos.</blockquote>
+            <a class="testimonial-source-link" target="_blank" rel="noopener noreferrer" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html">Ver fonte da avaliação ↗</a>
+          </article>
+          <article class="testimonial-card">
+            <div class="testimonial-top">
+              <div class="testimonial-avatar-wrap">
+                <img class="testimonial-avatar" src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&h=160&q=80" alt="Retrato ilustrativo" loading="lazy">
+                <span class="illustrative-badge">foto ilustrativa</span>
+              </div>
+              <div class="testimonial-person"><strong>Nilson Aguiar</strong><small>Avaliação pública · Apontador</small></div>
+            </div>
+            <div class="testimonial-stars">★★★★★</div>
+            <blockquote>Registrou uma avaliação muito positiva sobre o atendimento do Despachante Pastor em Santo André.</blockquote>
+            <a class="testimonial-source-link" target="_blank" rel="noopener noreferrer" href="https://www.apontador.com.br/local/sp/santo_andre/servicos_gerais/C406163352235Z2359/despachante_pastor_.html">Ver fonte da avaliação ↗</a>
+          </article>
+        </div>
+      </div>
+    `;
+    processSection.insertAdjacentElement('afterend', testimonials);
+    addNavLink(document.querySelector('.desktop-nav'), '#depoimentos', 'Depoimentos', 'a[href="#contato"]');
+    addNavLink(document.querySelector('.mobile-menu'), '#depoimentos', 'Depoimentos', 'a[href="#contato"]');
+  }
 
   const contactSection = document.querySelector('.contact-section');
   if (contactSection && !document.querySelector('#localizacao')) {
