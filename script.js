@@ -1,3 +1,8 @@
+const enhancementStyles = document.createElement('link');
+enhancementStyles.rel = 'stylesheet';
+enhancementStyles.href = './enhancements.css';
+document.head.appendChild(enhancementStyles);
+
 const menuButton = document.querySelector('.menu-toggle');
 const mobileMenu = document.querySelector('.mobile-menu');
 
