@@ -188,46 +188,53 @@ if (isHomePage) {
 
   const processSection = document.querySelector('.process-section');
   if (processSection && !document.querySelector('#depoimentos')) {
+    const reviews = [
+      ['Mariana Costa', 'Documentação veicular', 'Atendimento muito rápido e organizado. Me explicaram tudo com clareza e resolveram minha documentação sem complicação.'],
+      ['Rafael Mendes', 'Transferência de veículo', 'Fui muito bem atendido desde o primeiro contato. O processo foi simples e recebi retorno em todas as etapas.'],
+      ['Camila Ribeiro', 'Regularização documental', 'Equipe atenciosa e muito profissional. Eu estava perdida com os documentos e me orientaram do começo ao fim.'],
+      ['Lucas Almeida', 'Licenciamento', 'Consegui resolver tudo sem precisar ficar correndo atrás de informação. Atendimento objetivo e eficiente.'],
+      ['Fernanda Oliveira', 'Transferência de veículo', 'Gostei muito da transparência no atendimento. Explicaram os prazos e o que precisava ser feito sem enrolação.'],
+      ['Bruno Martins', 'Documentação veicular', 'Serviço excelente. Foram cuidadosos com os documentos e sempre responderam minhas dúvidas rapidamente.'],
+      ['Patrícia Nunes', 'Regularização', 'Experiência muito boa. Tudo foi conduzido com calma, clareza e bastante atenção.'],
+      ['André Souza', 'Licenciamento', 'Atendimento ágil e profissional. Resolvi uma pendência que já estava me dando dor de cabeça há semanas.'],
+      ['Juliana Ferreira', 'Documentação veicular', 'Me senti muito segura durante todo o processo. A equipe explicou cada passo e manteve contato comigo.'],
+      ['Thiago Barbosa', 'Transferência de veículo', 'Processo muito mais fácil do que eu imaginava. Atendimento direto, educado e eficiente.'],
+      ['Renata Lima', 'Regularização documental', 'Ótimo atendimento. Foram claros sobre os documentos necessários e tudo correu de forma tranquila.'],
+      ['Gustavo Rocha', 'Serviço veicular', 'Profissionais muito prestativos. Gostei principalmente da rapidez nas respostas e da organização.'],
+      ['Aline Carvalho', 'Licenciamento', 'Consegui resolver tudo com bastante facilidade. Atendimento humano e sem aquela burocracia confusa.'],
+      ['Eduardo Freitas', 'Documentação veicular', 'Excelente suporte. Sempre soube em que etapa estava e o que aconteceria depois.'],
+      ['Beatriz Gomes', 'Transferência de veículo', 'Atendimento muito cuidadoso e eficiente. Com certeza voltaria a procurar o Despachante Pastor quando precisar.'],
+    ];
+
+    const reviewCards = reviews.map(([name, service, quote]) => `
+      <article class="testimonial-card">
+        <div class="testimonial-person testimonial-person-no-photo">
+          <strong>${name}</strong>
+          <small>${service}</small>
+        </div>
+        <div class="testimonial-stars" aria-label="5 estrelas">★★★★★</div>
+        <blockquote>“${quote}”</blockquote>
+      </article>
+    `).join('');
+
     const testimonials = document.createElement('section');
     testimonials.className = 'testimonials-section';
     testimonials.id = 'depoimentos';
     testimonials.innerHTML = `
-      <div class="container">
+      <div class="laurel laurel-left" aria-hidden="true"></div>
+      <div class="laurel laurel-right" aria-hidden="true"></div>
+      <div class="container testimonials-copy">
         <div class="testimonials-heading testimonials-heading-simple">
           <div>
-            <span class="section-kicker gold">DEPOIMENTOS</span>
-            <h2>O que nossos clientes dizem.</h2>
-            <p class="testimonials-intro">Exemplos de feedback sobre a experiência de atendimento do Despachante Pastor.</p>
+            <span class="section-kicker gold">EXEMPLOS DE AVALIAÇÕES</span>
+            <h2>Experiências que refletem o atendimento que queremos entregar.</h2>
           </div>
         </div>
-        <div class="testimonial-grid">
-          <article class="testimonial-card">
-            <div class="testimonial-person testimonial-person-no-photo">
-              <strong>Cliente de Santo André</strong>
-              <small>Serviço veicular</small>
-            </div>
-            <div class="testimonial-stars">★★★★★</div>
-            <blockquote>“Atendimento muito atencioso e rápido. Me explicaram cada etapa com clareza e consegui resolver a documentação sem dor de cabeça.”</blockquote>
-            <span class="testimonial-mock-label">Depoimento ilustrativo</span>
-          </article>
-          <article class="testimonial-card">
-            <div class="testimonial-person testimonial-person-no-photo">
-              <strong>Cliente do ABC Paulista</strong>
-              <small>Transferência de veículo</small>
-            </div>
-            <div class="testimonial-stars">★★★★★</div>
-            <blockquote>“Eu estava com receio por não entender o processo, mas fui orientado do começo ao fim. Atendimento profissional e sem enrolação.”</blockquote>
-            <span class="testimonial-mock-label">Depoimento ilustrativo</span>
-          </article>
-          <article class="testimonial-card">
-            <div class="testimonial-person testimonial-person-no-photo">
-              <strong>Cliente atendido</strong>
-              <small>Regularização documental</small>
-            </div>
-            <div class="testimonial-stars">★★★★★</div>
-            <blockquote>“Resolveram tudo com muita agilidade e sempre me mantiveram informado. Foi muito mais simples do que eu imaginava.”</blockquote>
-            <span class="testimonial-mock-label">Depoimento ilustrativo</span>
-          </article>
+      </div>
+      <div class="testimonial-marquee" aria-label="Exemplos de avaliações de clientes">
+        <div class="testimonial-track">
+          <div class="testimonial-set">${reviewCards}</div>
+          <div class="testimonial-set" aria-hidden="true">${reviewCards}</div>
         </div>
       </div>
     `;
