@@ -14,19 +14,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./enhancements.css" />
+    <link rel="stylesheet" href="./portal.css" />
   </head>
   <body class="visa-page">
     <div class="site-shell">
       <header class="topbar" id="inicio">
         <div class="container nav-wrap">
           <a class="brand" href="./index.html" aria-label="Despachante Pastor - início">
-            <span class="brand-mark">
-              <img src="./assets/logo.png" alt="Logo Despachante Pastor" />
-            </span>
-            <span class="brand-copy">
-              <strong>Despachante Pastor</strong>
-              <small>Assessoria documental</small>
-            </span>
+            <span class="brand-mark"><img src="./assets/logo.png" alt="Logo Despachante Pastor" /></span>
+            <span class="brand-copy"><strong>Despachante Pastor</strong><small>Assessoria documental</small></span>
           </a>
 
           <nav class="desktop-nav" aria-label="Navegação principal">
@@ -38,10 +34,7 @@
           </nav>
 
           <a class="button button-gold desktop-cta" href="./index.html#contato">Solicitar atendimento</a>
-
-          <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
-            <span></span><span></span><span></span>
-          </button>
+          <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
         </div>
 
         <div class="mobile-menu" aria-hidden="true">
@@ -59,9 +52,7 @@
           <div class="container visa-hero-inner">
             <div class="visa-hero-copy reveal is-visible">
               <h1>Seu próximo destino começa com um processo <span>bem orientado.</span></h1>
-              <p>
-                Assessoria documental para solicitações de visto, com apoio na organização das informações, conferência dos documentos e acompanhamento das etapas do processo.
-              </p>
+              <p>Assessoria documental para solicitações de visto, com apoio na organização das informações, conferência dos documentos e acompanhamento das etapas do processo.</p>
               <div class="hero-actions">
                 <a class="button button-gold button-large" href="#destinos">Ver destinos <span aria-hidden="true">↓</span></a>
                 <a class="button button-ghost button-large" href="./index.html#contato">Falar com o atendimento</a>
@@ -86,78 +77,61 @@
             <div class="visa-section-heading reveal is-visible">
               <div>
                 <span class="section-kicker">DESTINOS</span>
-                <h2>Escolha o país e solicite sua assessoria.</h2>
+                <h2>Escolha o país e continue sua solicitação.</h2>
               </div>
-              <p>
-                Cada destino possui exigências próprias. O atendimento orienta quais informações e documentos são aplicáveis ao seu caso antes de iniciar a solicitação.
-              </p>
+              <p>Cada destino possui exigências próprias. O atendimento orienta quais informações e documentos são aplicáveis ao seu caso antes de iniciar a solicitação.</p>
             </div>
 
-            <div class="visa-grid">
-              <article class="visa-card reveal is-visible">
-                <div class="country-topline">
-                  <span class="country-code">USA</span>
-                  <span class="country-symbol" aria-hidden="true">✦</span>
+            <div class="visa-list">
+              <article class="visa-list-item available reveal is-visible">
+                <div class="flag-icon" role="img" aria-label="Bandeira dos Estados Unidos">🇺🇸</div>
+                <div class="visa-list-content">
+                  <div class="visa-list-meta">
+                    <h3>Estados Unidos</h3>
+                    <span class="visa-status live">Formulário online disponível</span>
+                  </div>
+                  <p>Assessoria para organizar a solicitação, revisar informações e preparar o processo de acordo com a finalidade da viagem e o perfil do requerente.</p>
                 </div>
-                <h3>Estados Unidos</h3>
-                <p>Assessoria para organizar e preparar a solicitação de visto conforme a finalidade da viagem e o perfil do requerente.</p>
-                <ul>
-                  <li>Orientação sobre o fluxo da solicitação</li>
-                  <li>Organização e conferência das informações</li>
-                  <li>Apoio na preparação para as etapas exigidas</li>
-                </ul>
-                <a class="button button-gold" href="./index.html?visto=estados-unidos#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                <div class="visa-list-actions">
+                  <a class="button button-gold" href="./login.html?next=visa-eua.html">Continuar para o formulário <span aria-hidden="true">→</span></a>
+                </div>
               </article>
 
-              <article class="visa-card reveal is-visible">
-                <div class="country-topline">
-                  <span class="country-code">CHN</span>
-                  <span class="country-symbol" aria-hidden="true">✦</span>
+              <article class="visa-list-item reveal is-visible">
+                <div class="flag-icon" role="img" aria-label="Bandeira da China">🇨🇳</div>
+                <div class="visa-list-content">
+                  <div class="visa-list-meta"><h3>China</h3><span class="visa-status">Assessoria sob consulta</span></div>
+                  <p>Suporte documental para estruturar a solicitação de visto para a China conforme o objetivo da viagem e os documentos aplicáveis ao caso.</p>
                 </div>
-                <h3>China</h3>
-                <p>Suporte documental para estruturar a solicitação de visto para a China de acordo com o objetivo informado pelo viajante.</p>
-                <ul>
-                  <li>Checklist documental orientado</li>
-                  <li>Conferência das informações fornecidas</li>
-                  <li>Acompanhamento do processo documental</li>
-                </ul>
-                <a class="button button-gold" href="./index.html?visto=china#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                <div class="visa-list-actions">
+                  <a class="button button-secondary" href="./index.html?visto=china#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                </div>
               </article>
 
-              <article class="visa-card reveal is-visible">
-                <div class="country-topline">
-                  <span class="country-code">SAU</span>
-                  <span class="country-symbol" aria-hidden="true">✦</span>
+              <article class="visa-list-item reveal is-visible">
+                <div class="flag-icon" role="img" aria-label="Bandeira da Arábia Saudita">🇸🇦</div>
+                <div class="visa-list-content">
+                  <div class="visa-list-meta"><h3>Arábia Saudita</h3><span class="visa-status">Assessoria sob consulta</span></div>
+                  <p>Assessoria para organizar documentos e orientar as etapas preparatórias da solicitação de visto para a Arábia Saudita.</p>
                 </div>
-                <h3>Arábia Saudita</h3>
-                <p>Assessoria para organizar os documentos e conduzir as etapas preparatórias da solicitação de visto para a Arábia Saudita.</p>
-                <ul>
-                  <li>Orientação conforme a finalidade informada</li>
-                  <li>Preparação e revisão da documentação</li>
-                  <li>Suporte durante as etapas aplicáveis</li>
-                </ul>
-                <a class="button button-gold" href="./index.html?visto=arabia-saudita#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                <div class="visa-list-actions">
+                  <a class="button button-secondary" href="./index.html?visto=arabia-saudita#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                </div>
               </article>
 
-              <article class="visa-card reveal is-visible">
-                <div class="country-topline">
-                  <span class="country-code">MOZ</span>
-                  <span class="country-symbol" aria-hidden="true">✦</span>
+              <article class="visa-list-item reveal is-visible">
+                <div class="flag-icon" role="img" aria-label="Bandeira de Moçambique">🇲🇿</div>
+                <div class="visa-list-content">
+                  <div class="visa-list-meta"><h3>Moçambique</h3><span class="visa-status">Assessoria sob consulta</span></div>
+                  <p>Apoio na organização do processo documental para solicitações de visto de Moçambique, com orientação clara sobre os próximos passos.</p>
                 </div>
-                <h3>Moçambique</h3>
-                <p>Apoio na organização do processo documental para solicitações de visto de Moçambique, com orientação clara sobre os próximos passos.</p>
-                <ul>
-                  <li>Levantamento dos documentos necessários</li>
-                  <li>Conferência e organização da solicitação</li>
-                  <li>Acompanhamento das etapas documentais</li>
-                </ul>
-                <a class="button button-gold" href="./index.html?visto=mocambique#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                <div class="visa-list-actions">
+                  <a class="button button-secondary" href="./index.html?visto=mocambique#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                </div>
               </article>
             </div>
 
-            <div class="visa-note">
-              A assessoria presta suporte documental e de preparação. Requisitos, prazos, taxas, elegibilidade e a decisão final sobre concessão de visto são definidos pelas autoridades competentes de cada país e podem mudar sem aviso prévio.
-            </div>
+            <div class="visa-helper-note">A assessoria presta suporte documental e de preparação. Requisitos, prazos, taxas, elegibilidade e a decisão final sobre concessão de visto são definidos pelas autoridades competentes de cada país e podem mudar sem aviso prévio.</div>
           </div>
         </section>
 
@@ -177,15 +151,9 @@
       <footer class="footer">
         <div class="container footer-main">
           <div class="brand footer-brand">
-            <span class="brand-mark">
-              <img src="./assets/logo.png" alt="Logo Despachante Pastor" />
-            </span>
-            <span class="brand-copy">
-              <strong>Despachante Pastor</strong>
-              <small>Assessoria documental</small>
-            </span>
+            <span class="brand-mark"><img src="./assets/logo.png" alt="Logo Despachante Pastor" /></span>
+            <span class="brand-copy"><strong>Despachante Pastor</strong><small>Assessoria documental</small></span>
           </div>
-
           <div class="footer-links">
             <a href="./index.html#servicos">Serviços</a>
             <a href="./vistos.html">Vistos</a>
