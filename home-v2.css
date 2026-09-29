@@ -248,19 +248,7 @@
   line-height: 1.72;
 }
 
-.testimonials-section::after {
-  content: "Conteúdo demonstrativo — substitua por avaliações reais antes da publicação final.";
-  position: absolute;
-  z-index: 3;
-  left: 50%;
-  bottom: 22px;
-  transform: translateX(-50%);
-  width: min(92%, 1180px);
-  color: rgba(255,255,255,.28);
-  font-size: 9px;
-  letter-spacing: .03em;
-  text-align: center;
-}
+
 
 @keyframes testimonialScroll {
   from { transform: translate3d(0, 0, 0); }
