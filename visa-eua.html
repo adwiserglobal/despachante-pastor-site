@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071b3a" />
+    <meta name="description" content="Questionário do visto americano do Despachante Pastor." />
+    <title>Visto Americano | Despachante Pastor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./portal.css" />
+  </head>
+  <body class="application-page">
+    <header class="application-topbar">
+      <div class="container">
+        <a class="application-identity" href="./vistos.html">
+          <span class="brand-mark"><img src="./assets/logo.png" alt="Logo Despachante Pastor" /></span>
+          <span class="application-title"><strong>Visto Americano</strong><small>Questionário do cliente</small></span>
+        </a>
+        <div class="application-user">
+          <span class="user-email" id="user-email"></span>
+          <button class="logout-button" id="logout-button" type="button">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="application-wrap">
+      <div id="application-loading" class="application-loading">Carregando seu formulário...</div>
+
+      <div id="application-content" hidden>
+        <div class="application-heading">
+          <div>
+            <span class="kicker">ESTADOS UNIDOS</span>
+            <h1>Formulário de visto</h1>
+          </div>
+          <div class="save-indicator" id="save-indicator"><span class="save-dot"></span><span id="save-text">Preparando...</span></div>
+        </div>
+
+        <div class="application-progress" id="application-progress" aria-label="Progresso do formulário"></div>
+
+        <section class="form-panel" id="form-panel">
+          <div class="form-panel-header">
+            <h2 id="step-title"></h2>
+            <p id="step-description"></p>
+          </div>
+
+          <form id="visa-form">
+            <div class="form-grid" id="form-fields"></div>
+            <div class="form-actions">
+              <button class="button button-secondary" id="prev-step" type="button">← Voltar</button>
+              <button class="button button-gold button-large" id="next-step" type="submit">Continuar</button>
+            </div>
+          </form>
+
+          <p class="form-note">Este questionário é usado pela assessoria para organizar o seu caso. Ele não substitui formulários oficiais, entrevistas ou exigências definidas pelas autoridades dos Estados Unidos.</p>
+        </section>
+
+        <section class="success-panel" id="success-panel">
+          <div class="success-icon">✓</div>
+          <h2>Questionário enviado</h2>
+          <p>Recebemos suas informações. A equipe do Despachante Pastor poderá revisar o material e orientar os próximos passos do processo.</p>
+          <a class="button button-gold button-large" href="./vistos.html">Voltar para Vistos</a>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-client.js"></script>
+    <script src="./visa-eua.js"></script>
+  </body>
+</html>
