@@ -91,6 +91,17 @@ if (isHomePage) {
   addNavLink(document.querySelector('.mobile-menu'), './vistos.html', 'Vistos', 'a[href="#contato"]');
   addNavLink(document.querySelector('.footer-links'), './vistos.html', 'Vistos', 'a[href="#contato"]');
 
+  document.querySelectorAll('.service-card').forEach((card) => {
+    const title = card.querySelector('h3')?.textContent?.trim();
+    if (title === 'Serviços internacionais') {
+      const link = card.querySelector('a');
+      if (link) {
+        link.href = './vistos.html';
+        link.innerHTML = 'Ver vistos <span>↗</span>';
+      }
+    }
+  });
+
   const contactSection = document.querySelector('.contact-section');
   if (contactSection && !document.querySelector('#localizacao')) {
     const locationSection = document.createElement('section');
