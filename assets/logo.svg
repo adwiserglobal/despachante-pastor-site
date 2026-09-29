@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="title desc">
+  <title id="title">Despachante Pastor</title>
+  <desc id="desc">Marca com balança, globo e o nome Despachante Pastor</desc>
+  <defs>
+    <path id="topArc" d="M 92 238 A 222 222 0 0 1 508 238"/>
+    <path id="bottomArc" d="M 94 410 A 220 220 0 0 0 506 410"/>
+  </defs>
+  <g fill="none" stroke="#404040" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="300" y1="223" x2="300" y2="430"/>
+    <line x1="146" y1="238" x2="454" y2="238"/>
+    <line x1="168" y1="238" x2="146" y2="341"/>
+    <line x1="168" y1="238" x2="190" y2="341"/>
+    <line x1="432" y1="238" x2="410" y2="341"/>
+    <line x1="432" y1="238" x2="454" y2="341"/>
+    <path d="M128 341h80c-7 34-31 54-40 54s-33-20-40-54Z" fill="#404040" stroke="none"/>
+    <path d="M392 341h80c-7 34-31 54-40 54s-33-20-40-54Z" fill="#404040" stroke="none"/>
+    <circle cx="300" cy="320" r="82" stroke-width="10"/>
+    <path d="M220 320h160M300 239c-25 22-39 49-39 81s14 61 39 82M300 239c25 22 39 49 39 81s-14 61-39 82M232 276c26 14 46 20 68 20s42-6 68-20M232 364c26-14 46-20 68-20s42 6 68 20" stroke-width="7"/>
+    <path d="M300 430v38M280 451h40M286 470h28" stroke-width="9"/>
+  </g>
+  <g fill="#404040" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="800" letter-spacing="4">
+    <text font-size="58"><textPath href="#topArc" startOffset="50%" text-anchor="middle">DESPACHANTE</textPath></text>
+    <text font-size="64"><textPath href="#bottomArc" startOffset="50%" text-anchor="middle">“PASTOR”</textPath></text>
+  </g>
+</svg>
