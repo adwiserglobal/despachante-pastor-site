@@ -1,3 +1,7 @@
+document.querySelectorAll('.brand-mark img, .logo-card img, .credibility-mark img').forEach((image) => {
+  image.src = './assets/logo.svg';
+});
+
 const menuButton = document.querySelector('.menu-toggle');
 const mobileMenu = document.querySelector('.mobile-menu');
 
@@ -50,8 +54,6 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
 const year = document.querySelector('#year');
 if (year) year.textContent = new Date().getFullYear();
 
-// Configure o número completo com DDI + DDD + número no atributo data-whatsapp
-// do botão em index.html. Ex.: data-whatsapp="5511999999999".
 const whatsappButton = document.querySelector('.whatsapp-placeholder');
 if (whatsappButton) {
   const phone = (whatsappButton.dataset.whatsapp || '').replace(/\D/g, '');
