@@ -1,8 +1,38 @@
-const sb = window.despachanteSupabase;
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  browserSessionPersistence,
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithPopup,
+  signOut,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyD05n9UT7vPVswl699-DXDJ-YZhiqSqVEU',
+  authDomain: 'despachante-pastor-4e8fa.firebaseapp.com',
+  projectId: 'despachante-pastor-4e8fa',
+  storageBucket: 'despachante-pastor-4e8fa.firebasestorage.app',
+  messagingSenderId: '195381885372',
+  appId: '1:195381885372:web:d564095721a79e91a553b9',
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
+await setPersistence(auth, browserSessionPersistence);
+
+const ALLOWED_EMAILS = new Set([
+  'despachantepastorinterno@gmail.com',
+  'desp.pastor@gmail.com',
+]);
 
 const gate = document.querySelector('#internal-gate');
 const app = document.querySelector('#internal-app');
 const loginButton = document.querySelector('#google-login');
+const loginButtonText = loginButton.querySelector('span');
 const loginMessage = document.querySelector('#internal-login-message');
 const logoutButton = document.querySelector('#internal-logout');
 const userEmailEl = document.querySelector('#internal-user-email');
@@ -23,15 +53,11 @@ const detailMeta = document.querySelector('#visa-detail-meta');
 const detailContent = document.querySelector('#visa-detail-content');
 const closeDetail = document.querySelector('#close-visa-detail');
 
-const ALLOWED_EMAILS = new Set([
-  'despachantepastorinterno@gmail.com',
-  'desp.pastor@gmail.com',
-]);
-
-let currentView = 'contacts';
 let currentUser = null;
+let currentView = 'contacts';
 let contactRows = [];
 let visaRows = [];
+let loadingData = false;
 
 function showLoginMessage(message, type = 'error') {
   loginMessage.textContent = message;
@@ -43,44 +69,9 @@ function clearLoginMessage() {
   loginMessage.className = 'internal-message';
 }
 
-function fmtDate(value) {
-  if (!value) return '—';
-  try {
-    return new Intl.DateTimeFormat('pt-BR', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-    }).format(new Date(value));
-  } catch {
-    return '—';
-  }
-}
-
-function readableService(value) {
-  const labels = {
-    'documentacao-veicular': 'Documentação veicular',
-    transferencia: 'Transferência de veículo',
-    regularizacao: 'Regularização',
-    vistos: 'Vistos e internacionais',
-    outro: 'Outro serviço',
-  };
-  return labels[value] || value || 'Não informado';
-}
-
-function labelStatus(value) {
-  const labels = {
-    new: 'Novo',
-    contacted: 'Contatado',
-    in_progress: 'Em andamento',
-    won: 'Convertido',
-    closed: 'Encerrado',
-    draft: 'Rascunho',
-    submitted: 'Enviado',
-    in_review: 'Em análise',
-    needs_information: 'Pedir informação',
-    completed: 'Concluído',
-    archived: 'Arquivado',
-  };
-  return labels[value] || value || '—';
+function setLoginBusy(busy) {
+  loginButton.disabled = busy;
+  loginButtonText.textContent = busy ? 'Entrando...' : 'Entrar com Google';
 }
 
 function createText(tag, text, className) {
@@ -90,71 +81,109 @@ function createText(tag, text, className) {
   return el;
 }
 
-async function audit(action, resourceType, resourceId = null) {
-  if (!currentUser) return;
+function fmtDate(value) {
+  if (!value) return '—';
   try {
-    await sb.from('internal_access_audit').insert({
-      admin_user_id: currentUser.id,
-      admin_email: String(currentUser.email || '').toLowerCase(),
-      action,
-      resource_type: resourceType,
-      resource_id: resourceId,
-    });
-  } catch (error) {
-    console.warn('Falha ao registrar auditoria.', error);
+    return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
+  } catch {
+    return '—';
   }
 }
 
-async function isAuthorizedSession(user) {
-  if (!user) return false;
-  const email = String(user.email || '').toLowerCase();
-  if (!ALLOWED_EMAILS.has(email)) return false;
-  const provider = user.app_metadata?.provider;
-  if (provider !== 'google') return false;
+function readableService(value) {
+  return ({
+    'documentacao-veicular': 'Documentação veicular',
+    transferencia: 'Transferência de veículo',
+    regularizacao: 'Regularização',
+    vistos: 'Vistos e internacionais',
+    outro: 'Outro serviço',
+  })[value] || value || 'Não informado';
+}
 
-  const { data, error } = await sb.rpc('is_internal_admin');
-  return !error && data === true;
+function labelStatus(value) {
+  return ({
+    new: 'Novo', contacted: 'Contatado', in_progress: 'Em andamento', won: 'Convertido', closed: 'Encerrado',
+    draft: 'Rascunho', submitted: 'Enviado', in_review: 'Em análise', needs_information: 'Pedir informação', completed: 'Concluído', archived: 'Arquivado',
+  })[value] || value || '—';
+}
+
+async function api(action, payload = {}) {
+  if (!currentUser) throw new Error('Sessão não encontrada.');
+  const token = await currentUser.getIdToken(false);
+  const response = await fetch('/api/internal', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ action, ...payload }),
+  });
+
+  let result = {};
+  try { result = await response.json(); } catch {}
+
+  if (response.status === 401) {
+    await signOut(auth);
+    throw new Error(result.error || 'Sua sessão expirou. Entre novamente.');
+  }
+  if (!response.ok) throw new Error(result.error || 'Não foi possível concluir a operação.');
+  return result;
+}
+
+async function confirmServerAccess(user) {
+  const email = String(user?.email || '').toLowerCase();
+  if (!ALLOWED_EMAILS.has(email)) return false;
+  if (!user.emailVerified) return false;
+  currentUser = user;
+  const result = await api('whoami');
+  return result?.ok === true && String(result.email || '').toLowerCase() === email;
 }
 
 async function enterApp(user) {
   currentUser = user;
   userEmailEl.textContent = user.email || '';
+  clearLoginMessage();
   gate.hidden = true;
   app.hidden = false;
-  await audit('login', 'internal_portal');
   await loadAllData();
 }
 
-async function rejectSession(message = 'Esta conta Google não possui acesso à área interna.') {
-  await sb.auth.signOut();
+async function rejectSession(message) {
+  try { await signOut(auth); } catch {}
   currentUser = null;
   app.hidden = true;
   gate.hidden = false;
-  showLoginMessage(message, 'error');
+  showLoginMessage(message || 'Esta conta Google não possui acesso à área interna.');
 }
 
 loginButton.addEventListener('click', async () => {
   clearLoginMessage();
-  loginButton.disabled = true;
-  loginButton.lastChild.textContent = ' Entrando...';
-  const redirectTo = `${window.location.origin}/interno`;
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo,
-      scopes: 'openid email profile',
-    },
-  });
-  if (error) {
-    showLoginMessage('Não foi possível iniciar o login com Google. Verifique a configuração do provedor.', 'error');
-    loginButton.disabled = false;
-    loginButton.lastChild.textContent = ' Entrar com Google';
+  setLoginBusy(true);
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    if (!await confirmServerAccess(user)) {
+      await rejectSession('Esta conta Google não está autorizada para a área interna.');
+      return;
+    }
+    await enterApp(user);
+  } catch (error) {
+    console.error(error);
+    if (error?.code === 'auth/popup-closed-by-user') {
+      showLoginMessage('Login cancelado.');
+    } else if (error?.code === 'auth/unauthorized-domain') {
+      showLoginMessage('Este domínio ainda não foi autorizado no Firebase Authentication.');
+    } else {
+      showLoginMessage(error?.message || 'Não foi possível entrar com Google.');
+    }
+  } finally {
+    setLoginBusy(false);
   }
 });
 
 logoutButton.addEventListener('click', async () => {
-  await audit('logout', 'internal_portal');
-  await sb.auth.signOut();
+  await signOut(auth);
   window.location.replace('/interno');
 });
 
@@ -191,15 +220,15 @@ function buildStatusSelect(value, options, onChange) {
     select.appendChild(el);
   });
   select.addEventListener('change', async () => {
-    select.disabled = true;
     const previous = value;
+    select.disabled = true;
     try {
       await onChange(select.value);
       value = select.value;
     } catch (error) {
       console.error(error);
       select.value = previous;
-      window.alert('Não foi possível atualizar o status.');
+      window.alert(error?.message || 'Não foi possível atualizar o status.');
     } finally {
       select.disabled = false;
     }
@@ -210,12 +239,11 @@ function buildStatusSelect(value, options, onChange) {
 function renderContacts() {
   contactsBody.replaceChildren();
   contactsEmpty.hidden = contactRows.length > 0;
-  const today = new Date();
-  const todayKey = today.toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
   renderStats(contactStats, [
     ['Total de contatos', contactRows.length],
     ['Novos', contactRows.filter((row) => row.status === 'new').length],
-    ['Recebidos hoje', contactRows.filter((row) => String(row.created_at || '').slice(0, 10) === todayKey).length],
+    ['Recebidos hoje', contactRows.filter((row) => String(row.created_at || '').slice(0, 10) === today).length],
   ]);
 
   contactRows.forEach((row) => {
@@ -235,10 +263,8 @@ function renderContacts() {
 
     const statusCell = document.createElement('td');
     statusCell.appendChild(buildStatusSelect(row.status, ['new', 'contacted', 'in_progress', 'won', 'closed'], async (status) => {
-      const { error } = await sb.from('quote_requests').update({ status }).eq('id', row.id);
-      if (error) throw error;
+      await api('update_quote_status', { id: row.id, status });
       row.status = status;
-      await audit(`status:${status}`, 'quote_requests', row.id);
       renderContacts();
     }));
     tr.appendChild(statusCell);
@@ -256,12 +282,11 @@ function renderVisas() {
   ]);
 
   visaRows.forEach((row) => {
-    const form = row.form_data || {};
     const tr = document.createElement('tr');
     tr.appendChild(createText('td', fmtDate(row.updated_at || row.created_at)));
 
     const applicant = document.createElement('td');
-    applicant.append(createText('strong', form.full_name || 'Sem nome'), createText('small', form.email || 'E-mail não informado'));
+    applicant.append(createText('strong', row.applicant_name || 'Sem nome'), createText('small', row.applicant_email || 'E-mail não informado'));
     tr.appendChild(applicant);
 
     tr.appendChild(createText('td', row.country === 'US' ? 'Estados Unidos' : row.country));
@@ -269,10 +294,8 @@ function renderVisas() {
 
     const statusCell = document.createElement('td');
     statusCell.appendChild(buildStatusSelect(row.status, ['draft', 'submitted', 'in_review', 'needs_information', 'completed', 'archived'], async (status) => {
-      const { error } = await sb.from('visa_applications').update({ status, updated_at: new Date().toISOString() }).eq('id', row.id);
-      if (error) throw error;
+      await api('update_visa_status', { id: row.id, status });
       row.status = status;
-      await audit(`status:${status}`, 'visa_applications', row.id);
       renderVisas();
     }));
     tr.appendChild(statusCell);
@@ -294,37 +317,40 @@ const fieldLabels = {
 };
 
 function humanValue(value) {
-  if (value === true) return 'Sim';
-  if (value === false) return 'Não';
-  if (value === 'sim') return 'Sim';
-  if (value === 'nao') return 'Não';
+  if (value === true || value === 'sim') return 'Sim';
+  if (value === false || value === 'nao') return 'Não';
   if (Array.isArray(value)) return value.join(', ');
   if (value && typeof value === 'object') return JSON.stringify(value, null, 2);
   return value == null || value === '' ? '—' : String(value);
 }
 
 async function openVisa(row) {
-  detailTitle.textContent = row.form_data?.full_name || 'Solicitação de visto';
-  detailMeta.textContent = `${labelStatus(row.status)} • Atualizado em ${fmtDate(row.updated_at || row.created_at)}`;
-  detailContent.replaceChildren();
+  try {
+    const { row: detail } = await api('get_visa', { id: row.id });
+    detailTitle.textContent = detail?.form_data?.full_name || row.applicant_name || 'Solicitação de visto';
+    detailMeta.textContent = `${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
+    detailContent.replaceChildren();
 
-  const section = document.createElement('section');
-  section.className = 'visa-data-section';
-  section.appendChild(createText('h3', 'Dados do formulário'));
-  const grid = document.createElement('div');
-  grid.className = 'visa-data-grid';
+    const section = document.createElement('section');
+    section.className = 'visa-data-section';
+    section.appendChild(createText('h3', 'Dados do formulário'));
+    const grid = document.createElement('div');
+    grid.className = 'visa-data-grid';
 
-  Object.entries(row.form_data || {}).forEach(([key, value]) => {
-    const item = document.createElement('div');
-    const text = humanValue(value);
-    item.className = `visa-data-item${text.length > 100 ? ' full' : ''}`;
-    item.append(createText('small', fieldLabels[key] || key.replaceAll('_', ' ')), createText('strong', text));
-    grid.appendChild(item);
-  });
-  section.appendChild(grid);
-  detailContent.appendChild(section);
-  await audit('view_detail', 'visa_applications', row.id);
-  detailDialog.showModal();
+    Object.entries(detail.form_data || {}).forEach(([key, value]) => {
+      const item = document.createElement('div');
+      const text = humanValue(value);
+      item.className = `visa-data-item${text.length > 100 ? ' full' : ''}`;
+      item.append(createText('small', fieldLabels[key] || key.replaceAll('_', ' ')), createText('strong', text));
+      grid.appendChild(item);
+    });
+
+    section.appendChild(grid);
+    detailContent.appendChild(section);
+    detailDialog.showModal();
+  } catch (error) {
+    window.alert(error?.message || 'Não foi possível abrir o formulário.');
+  }
 }
 
 closeDetail.addEventListener('click', () => detailDialog.close());
@@ -333,42 +359,52 @@ detailDialog.addEventListener('click', (event) => {
 });
 
 async function loadAllData() {
-  if (!currentUser) return;
+  if (!currentUser || loadingData) return;
+  loadingData = true;
   refreshButton.disabled = true;
   refreshButton.textContent = 'Atualizando...';
   try {
-    const [quotesResult, visasResult] = await Promise.all([
-      sb.from('quote_requests').select('id,created_at,name,email,phone,vehicle_plate,service,status').order('created_at', { ascending: false }).limit(500),
-      sb.from('visa_applications').select('id,country,status,current_step,form_data,created_at,updated_at,submitted_at').order('updated_at', { ascending: false }).limit(500),
+    const [quotes, visas] = await Promise.all([
+      api('list_quotes'),
+      api('list_visas'),
     ]);
-    if (quotesResult.error) throw quotesResult.error;
-    if (visasResult.error) throw visasResult.error;
-    contactRows = quotesResult.data || [];
-    visaRows = visasResult.data || [];
+    contactRows = quotes.rows || [];
+    visaRows = visas.rows || [];
     renderContacts();
     renderVisas();
-    await audit('refresh', 'internal_portal');
   } catch (error) {
-    console.error('Falha ao carregar área interna:', error);
-    window.alert('Não foi possível carregar os dados. A sessão pode ter expirado ou não ter permissão.');
+    console.error(error);
+    if (!auth.currentUser) {
+      await rejectSession(error?.message || 'Sua sessão expirou. Entre novamente.');
+    } else {
+      window.alert(error?.message || 'Não foi possível carregar os dados internos.');
+    }
   } finally {
+    loadingData = false;
     refreshButton.disabled = false;
     refreshButton.textContent = 'Atualizar';
   }
 }
 
-(async () => {
-  clearLoginMessage();
-  const { data, error } = await sb.auth.getUser();
-  if (error || !data.user) {
-    gate.hidden = false;
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    currentUser = null;
     app.hidden = true;
+    gate.hidden = false;
     return;
   }
 
-  if (await isAuthorizedSession(data.user)) {
-    await enterApp(data.user);
-  } else {
-    await rejectSession();
+  try {
+    setLoginBusy(true);
+    if (!await confirmServerAccess(user)) {
+      await rejectSession('Esta conta Google não está autorizada para a área interna.');
+      return;
+    }
+    await enterApp(user);
+  } catch (error) {
+    console.error(error);
+    await rejectSession(error?.message || 'Não foi possível validar seu acesso.');
+  } finally {
+    setLoginBusy(false);
   }
-})();
+});
