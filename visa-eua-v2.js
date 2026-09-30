@@ -1,4 +1,5 @@
 const sb = window.despachanteSupabase;
+window.PastorLoader?.show();
 
 const steps = [
   {
@@ -302,12 +303,14 @@ async function submitApplication() {
 
   if (error) {
     console.error(error);
+    await window.PastorLoader?.hide?.(550);
     alert('Não foi possível enviar agora. Seu progresso continua salvo. Tente novamente.');
     nextButton.disabled = false;
     nextButton.textContent = 'Enviar Questionário';
     return;
   }
 
+  await window.PastorLoader?.hide?.(650);
   document.querySelector('#form-panel').hidden = true;
   progressRoot.hidden = true;
   document.querySelector('.application-status-row').hidden = true;
@@ -318,6 +321,7 @@ async function submitApplication() {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!form.reportValidity()) return;
+  window.PastorLoader?.show();
   collectVisibleData();
   await saveDraft(false);
 
@@ -325,6 +329,7 @@ form.addEventListener('submit', async (event) => {
     state.currentStep += 1;
     renderStep();
     await saveDraft(false);
+    await window.PastorLoader?.hide?.(500);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
@@ -365,8 +370,10 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
     app.hidden = false;
     renderStep();
     setSaveState('saved', 'Progresso salvo');
+    await window.PastorLoader?.hide?.(550);
   } catch (error) {
     console.error(error);
+    await window.PastorLoader?.hide?.(350);
     loading.textContent = 'Não foi possível carregar seu formulário. Atualize a página ou tente novamente mais tarde.';
   }
 })();
