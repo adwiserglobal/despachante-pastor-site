@@ -9,21 +9,66 @@ const ALLOWED_EMAILS = new Set([
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_ADMIN_PROJECT_ID || 'despachante-pastor-4e8fa';
 const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://bzjxwrcefctxzxhmxtcd.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+function normalizeFirebasePrivateKey(rawValue) {
+  if (!rawValue) return null;
+
+  let value = String(rawValue).trim();
+
+  // Be tolerant if the whole Firebase service-account JSON was pasted by mistake.
+  if (value.startsWith('{')) {
+    try {
+      const serviceAccount = JSON.parse(value);
+      if (serviceAccount?.private_key) value = String(serviceAccount.private_key);
+    } catch {
+      // Continue with normal PEM parsing below and return a useful error if invalid.
+    }
+  }
+
+  // Vercel/env UIs sometimes preserve the JSON quotes around the private_key value.
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      value = value.slice(1, -1);
+    }
+  }
+
+  value = String(value)
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .trim();
+
+  const begin = '-----BEGIN PRIVATE KEY-----';
+  const end = '-----END PRIVATE KEY-----';
+  const beginIndex = value.indexOf(begin);
+  const endIndex = value.indexOf(end);
+
+  if (beginIndex === -1 || endIndex === -1 || endIndex < beginIndex) {
+    throw new Error('FIREBASE_ADMIN_PRIVATE_KEY inválida. Cole somente o valor private_key do JSON do Firebase, incluindo BEGIN PRIVATE KEY e END PRIVATE KEY.');
+  }
+
+  // Strip accidental prefixes/suffixes such as `private_key=` without exposing the key.
+  value = value.slice(beginIndex, endIndex + end.length);
+  return `${value}\n`;
+}
+
 function getFirebaseAdmin() {
-  if (!FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
+  if (!FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
     throw new Error('Firebase Admin não configurado no servidor.');
   }
 
   if (!getApps().length) {
+    const privateKey = normalizeFirebasePrivateKey(process.env.FIREBASE_ADMIN_PRIVATE_KEY);
+
     initializeApp({
       credential: cert({
         projectId: FIREBASE_PROJECT_ID,
         clientEmail: FIREBASE_CLIENT_EMAIL,
-        privateKey: FIREBASE_PRIVATE_KEY,
+        privateKey,
       }),
     });
   }
