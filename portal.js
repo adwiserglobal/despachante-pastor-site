@@ -9,6 +9,9 @@ const stepLabelEl = document.querySelector('#us-visa-step-label');
 const percentEl = document.querySelector('#us-visa-percent');
 const progressFillEl = document.querySelector('#us-visa-progress-fill');
 const logoutButton = document.querySelector('#portal-logout');
+const continueApplicationLink = document.querySelector('.request-continue');
+
+window.PastorLoader?.show();
 
 function showApplicationState(application) {
   const totalSteps = 5;
@@ -30,7 +33,16 @@ function showApplicationState(application) {
   descriptionEl.textContent = 'Sua aplicação está salva e pode ser retomada exatamente de onde você parou.';
 }
 
+continueApplicationLink?.addEventListener('click', async (event) => {
+  event.preventDefault();
+  const href = continueApplicationLink.getAttribute('href');
+  window.PastorLoader?.show();
+  await new Promise((resolve) => setTimeout(resolve, 520));
+  window.location.href = href || '/vistos/estados-unidos';
+});
+
 logoutButton.addEventListener('click', async () => {
+  window.PastorLoader?.show();
   await portalSb.auth.signOut();
   window.location.replace('./login.html');
 });
@@ -58,8 +70,10 @@ logoutButton.addEventListener('click', async () => {
     showApplicationState(application || null);
     loading.hidden = true;
     content.hidden = false;
+    await window.PastorLoader?.hide?.(550);
   } catch (error) {
     console.error(error);
+    await window.PastorLoader?.hide?.(350);
     loading.className = 'portal-error';
     loading.textContent = 'Não foi possível carregar suas solicitações agora. Atualize a página e tente novamente.';
   }
