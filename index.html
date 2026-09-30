@@ -262,19 +262,13 @@
             <div class="contact-card reveal delay-1">
               <span class="contact-tag">Fale com nossa equipe</span>
               <h3>Solicite um atendimento</h3>
-              <p>Escolha uma das opções abaixo para iniciar sua solicitação.</p>
+              <p>Entre em contato pelo WhatsApp para iniciar sua solicitação.</p>
 
-              <a class="contact-action primary" href="mailto:contato@despachantepastor.com.br">
-                <span class="action-icon">✉</span>
-                <span><small>E-mail</small><strong>Enviar solicitação</strong></span>
-                <b>↗</b>
-              </a>
-
-              <button class="contact-action secondary whatsapp-placeholder" type="button" data-whatsapp="">
-                <span class="action-icon">◔</span>
+              <a class="contact-action primary" href="https://wa.me/551144382633?text=Ol%C3%A1%21%20Gostaria%20de%20solicitar%20um%20atendimento%20com%20o%20Despachante%20Pastor." target="_blank" rel="noopener noreferrer">
+                <span class="action-icon">◉</span>
                 <span><small>WhatsApp</small><strong>Falar pelo WhatsApp</strong></span>
                 <b>↗</b>
-              </button>
+              </a>
 
               <small class="contact-note">Atendimento sujeito ao horário comercial e à disponibilidade da equipe.</small>
             </div>
@@ -309,5 +303,11 @@
     </div>
 
     <script src="./script.js"></script>
+    <script>
+      const quotePrivacyNote = document.querySelector('.quote-note');
+      if (quotePrivacyNote) {
+        quotePrivacyNote.innerHTML = '<span aria-hidden="true">⌁</span> Ao clicar em solicitar orçamento, você concorda com a política de privacidade.';
+      }
+    </script>
   </body>
 </html>
