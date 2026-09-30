@@ -1,0 +1,48 @@
+/* Location section refinements */
+.location-section .container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.location-heading {
+  display: contents !important;
+}
+
+.location-heading > div {
+  grid-row: 1;
+  margin-bottom: 34px;
+}
+
+.map-shell {
+  grid-row: 2;
+  background: #071b3a;
+  border-color: rgba(10, 42, 86, .28);
+  box-shadow: 0 28px 80px rgba(4, 20, 46, .14);
+}
+
+.map-shell iframe {
+  filter: grayscale(.2) invert(.9) hue-rotate(180deg) brightness(.72) contrast(1.15) saturate(.65);
+}
+
+.map-address-card {
+  display: none !important;
+}
+
+.location-heading > .button {
+  grid-row: 3;
+  justify-self: center;
+  width: auto;
+  min-width: 190px;
+  margin-top: 28px;
+}
+
+@media (max-width: 680px) {
+  .location-heading > div {
+    margin-bottom: 24px;
+  }
+
+  .location-heading > .button {
+    width: min(100%, 280px) !important;
+    margin-top: 22px;
+  }
+}
