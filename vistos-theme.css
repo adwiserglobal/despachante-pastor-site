@@ -1,0 +1,232 @@
+/* Visa page visual identity — scoped so it does not affect the rest of the site */
+
+.visa-page .visa-hero {
+  isolation: isolate;
+  min-height: 680px;
+  background:
+    radial-gradient(circle at 18% 82%, rgba(211, 173, 91, .12), transparent 30%),
+    linear-gradient(132deg, #031127 0%, #061a38 46%, #0a2a59 100%);
+}
+
+/* Photographic flag layer with a real mask-gradient fade */
+.visa-page .visa-hero::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: -3%;
+  bottom: 0;
+  width: 64%;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3,17,39,.08), rgba(3,17,39,.18)),
+    url("https://images.unsplash.com/photo-1464462605615-4ff728ecc301?auto=format&fit=crop&w=1800&q=85") center 48% / cover no-repeat;
+  opacity: .72;
+  filter: saturate(.82) contrast(1.02);
+  -webkit-mask-image: radial-gradient(ellipse 94% 84% at 83% 50%, #000 0%, #000 44%, rgba(0,0,0,.82) 58%, rgba(0,0,0,.34) 76%, transparent 100%);
+  mask-image: radial-gradient(ellipse 94% 84% at 83% 50%, #000 0%, #000 44%, rgba(0,0,0,.82) 58%, rgba(0,0,0,.34) 76%, transparent 100%);
+}
+
+/* Dark wash keeps the copy readable while preserving the flag texture */
+.visa-page .visa-hero {
+  --visa-photo-wash: linear-gradient(90deg, #031127 0%, rgba(3,17,39,.95) 31%, rgba(3,17,39,.68) 58%, rgba(3,17,39,.16) 100%);
+}
+
+.visa-page .visa-hero-inner::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 calc((100vw - min(1180px, calc(100vw - 40px))) / -2);
+  pointer-events: none;
+  background: var(--visa-photo-wash);
+}
+
+.visa-page .visa-hero-inner {
+  min-height: 680px;
+  grid-template-columns: 1.08fr .92fr;
+  gap: 78px;
+  padding-top: 132px;
+  padding-bottom: 82px;
+}
+
+.visa-page .visa-hero-copy {
+  position: relative;
+  max-width: 760px;
+}
+
+.visa-page .visa-hero-copy::before {
+  content: "VISTOS INTERNACIONAIS";
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin-bottom: 24px;
+  padding: 0 13px;
+  border: 1px solid rgba(226,197,127,.24);
+  border-radius: 999px;
+  color: #ecd9a8;
+  background: rgba(211,173,91,.08);
+  backdrop-filter: blur(12px);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.visa-page .visa-hero-copy h1 {
+  max-width: 780px;
+  text-wrap: balance;
+  text-shadow: 0 14px 48px rgba(0,0,0,.22);
+}
+
+.visa-page .visa-hero-copy p {
+  max-width: 610px;
+  color: rgba(222,230,241,.82);
+}
+
+.visa-page .visa-hero-card {
+  overflow: hidden;
+  border-color: rgba(255,255,255,.18);
+  background: linear-gradient(145deg, rgba(7,28,59,.80), rgba(7,28,59,.48));
+  box-shadow: 0 32px 90px rgba(0,0,0,.30);
+  backdrop-filter: blur(24px) saturate(1.08);
+}
+
+/* Subtle passport/visa stamp treatment */
+.visa-page .visa-hero-card::after {
+  content: "VISA";
+  position: absolute;
+  right: -24px;
+  bottom: -28px;
+  width: 128px;
+  height: 128px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(226,197,127,.14);
+  border-radius: 50%;
+  color: rgba(226,197,127,.12);
+  font-family: "Manrope", sans-serif;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  transform: rotate(-15deg);
+  pointer-events: none;
+}
+
+.visa-page .visa-checks div {
+  border: 1px solid rgba(255,255,255,.055);
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(10px);
+}
+
+.visa-page .visa-services {
+  position: relative;
+  background:
+    radial-gradient(circle at 8% 6%, rgba(211,173,91,.07), transparent 24%),
+    linear-gradient(180deg, #f7f9fc 0%, #f3f6fa 100%);
+}
+
+.visa-page .visa-section-heading h2 {
+  text-wrap: balance;
+}
+
+.visa-page .visa-list-item {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,.90);
+  backdrop-filter: blur(10px);
+}
+
+.visa-page .visa-list-item::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  opacity: 0;
+  background: linear-gradient(180deg, #d3ad5b, #e8cf91);
+  transition: opacity .22s ease;
+}
+
+.visa-page .visa-list-item:hover::after,
+.visa-page .visa-list-item.available::after {
+  opacity: 1;
+}
+
+.visa-page .flag-icon {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 10px 28px rgba(7,27,58,.08);
+}
+
+.visa-page .visa-cta-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 90% 18%, rgba(211,173,91,.18), transparent 30%),
+    linear-gradient(135deg, #04142e, #0a2b5d);
+}
+
+.visa-page .visa-cta-card::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  bottom: -130px;
+  width: 330px;
+  height: 330px;
+  border: 1px solid rgba(226,197,127,.11);
+  border-radius: 50%;
+  box-shadow: 0 0 0 34px rgba(226,197,127,.035), 0 0 0 68px rgba(226,197,127,.022);
+  pointer-events: none;
+}
+
+.visa-page .visa-cta-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 980px) {
+  .visa-page .visa-hero::after {
+    right: -18%;
+    width: 92%;
+    opacity: .48;
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.58) 48%, transparent 100%);
+    mask-image: linear-gradient(180deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.58) 48%, transparent 100%);
+  }
+
+  .visa-page .visa-hero-inner {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 34px;
+    padding-top: 150px;
+    padding-bottom: 78px;
+  }
+
+  .visa-page .visa-hero-inner::before {
+    background: linear-gradient(180deg, rgba(3,17,39,.70) 0%, rgba(3,17,39,.92) 48%, #031127 100%);
+  }
+
+  .visa-page .visa-hero-card {
+    max-width: 720px;
+  }
+}
+
+@media (max-width: 680px) {
+  .visa-page .visa-hero::after {
+    right: -36%;
+    width: 132%;
+    opacity: .38;
+    background-position: 56% 42%;
+  }
+
+  .visa-page .visa-hero-copy::before {
+    margin-bottom: 19px;
+  }
+
+  .visa-page .visa-hero-copy h1 {
+    font-size: clamp(42px, 12vw, 54px);
+  }
+
+  .visa-page .visa-hero-copy p {
+    font-size: 15px;
+  }
+}
