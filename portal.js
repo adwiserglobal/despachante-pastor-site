@@ -26,15 +26,6 @@ function showApplicationState(application) {
     return;
   }
 
-  if (application.status === 'submitted') {
-    statusEl.textContent = 'Enviado';
-    descriptionEl.textContent = 'Sua aplicação foi enviada para análise da equipe do Despachante Pastor.';
-    stepLabelEl.textContent = 'Questionário concluído';
-    percentEl.textContent = '100%';
-    progressFillEl.style.width = '100%';
-    return;
-  }
-
   statusEl.textContent = 'Em andamento';
   descriptionEl.textContent = 'Sua aplicação está salva e pode ser retomada exatamente de onde você parou.';
 }
@@ -54,17 +45,17 @@ logoutButton.addEventListener('click', async () => {
 
     userEmail.textContent = session.user.email || '';
 
-    const { data: applications, error } = await portalSb
+    const { data: application, error } = await portalSb
       .from('visa_applications')
-      .select('id,status,current_step,updated_at')
+      .select('id,status,current_step')
       .eq('user_id', session.user.id)
       .eq('country', 'US')
-      .order('updated_at', { ascending: false })
-      .limit(1);
+      .eq('status', 'draft')
+      .maybeSingle();
 
     if (error) throw error;
 
-    showApplicationState(applications?.[0] || null);
+    showApplicationState(application || null);
     loading.hidden = true;
     content.hidden = false;
   } catch (error) {
