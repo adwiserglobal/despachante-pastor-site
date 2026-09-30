@@ -1,0 +1,62 @@
+.contact-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #f5f7fa;
+}
+
+.contact-section::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0 auto 0 0;
+  width: min(72vw, 1120px);
+  background-image: url("https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1800&q=86");
+  background-size: cover;
+  background-position: center left;
+  background-repeat: no-repeat;
+  opacity: 0.34;
+  pointer-events: none;
+  -webkit-mask-image:
+    linear-gradient(to right, #000 0%, #000 24%, rgba(0,0,0,.78) 45%, rgba(0,0,0,.28) 70%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 24%, rgba(0,0,0,.78) 45%, rgba(0,0,0,.28) 70%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.contact-section::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(245,247,250,.12) 0%, rgba(245,247,250,.30) 30%, rgba(245,247,250,.86) 61%, #f5f7fa 78%),
+    linear-gradient(180deg, #f5f7fa 0%, transparent 18%, transparent 82%, #f5f7fa 100%);
+  pointer-events: none;
+}
+
+.contact-grid {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 980px) {
+  .contact-section::before {
+    width: 100%;
+    height: 58%;
+    inset: 0 0 auto;
+    opacity: 0.22;
+    background-position: center;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.65) 52%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,.65) 52%, transparent 100%);
+    -webkit-mask-composite: initial;
+    mask-composite: initial;
+  }
+
+  .contact-section::after {
+    background: linear-gradient(180deg, rgba(245,247,250,.28) 0%, rgba(245,247,250,.72) 38%, #f5f7fa 66%);
+  }
+}
