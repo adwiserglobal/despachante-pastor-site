@@ -2,7 +2,7 @@
 
 .visa-page .visa-hero {
   isolation: isolate;
-  min-height: 680px;
+  min-height: 650px;
   background:
     radial-gradient(circle at 18% 82%, rgba(211, 173, 91, .12), transparent 30%),
     linear-gradient(132deg, #031127 0%, #061a38 46%, #0a2a59 100%);
@@ -16,7 +16,7 @@
   top: 0;
   right: -3%;
   bottom: 0;
-  width: 64%;
+  width: 68%;
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(3,17,39,.08), rgba(3,17,39,.18)),
@@ -27,9 +27,8 @@
   mask-image: radial-gradient(ellipse 94% 84% at 83% 50%, #000 0%, #000 44%, rgba(0,0,0,.82) 58%, rgba(0,0,0,.34) 76%, transparent 100%);
 }
 
-/* Dark wash keeps the copy readable while preserving the flag texture */
 .visa-page .visa-hero {
-  --visa-photo-wash: linear-gradient(90deg, #031127 0%, rgba(3,17,39,.95) 31%, rgba(3,17,39,.68) 58%, rgba(3,17,39,.16) 100%);
+  --visa-photo-wash: linear-gradient(90deg, #031127 0%, rgba(3,17,39,.96) 31%, rgba(3,17,39,.74) 57%, rgba(3,17,39,.18) 100%);
 }
 
 .visa-page .visa-hero-inner::before {
@@ -42,16 +41,17 @@
 }
 
 .visa-page .visa-hero-inner {
-  min-height: 680px;
-  grid-template-columns: 1.08fr .92fr;
-  gap: 78px;
+  min-height: 650px;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 0;
   padding-top: 132px;
   padding-bottom: 82px;
 }
 
 .visa-page .visa-hero-copy {
   position: relative;
-  max-width: 760px;
+  max-width: 780px;
 }
 
 .visa-page .visa-hero-copy::before {
@@ -80,41 +80,6 @@
 .visa-page .visa-hero-copy p {
   max-width: 610px;
   color: rgba(222,230,241,.82);
-}
-
-.visa-page .visa-hero-card {
-  overflow: hidden;
-  border-color: rgba(255,255,255,.18);
-  background: linear-gradient(145deg, rgba(7,28,59,.80), rgba(7,28,59,.48));
-  box-shadow: 0 32px 90px rgba(0,0,0,.30);
-  backdrop-filter: blur(24px) saturate(1.08);
-}
-
-/* Subtle passport/visa stamp treatment */
-.visa-page .visa-hero-card::after {
-  content: "VISA";
-  position: absolute;
-  right: -24px;
-  bottom: -28px;
-  width: 128px;
-  height: 128px;
-  display: grid;
-  place-items: center;
-  border: 2px solid rgba(226,197,127,.14);
-  border-radius: 50%;
-  color: rgba(226,197,127,.12);
-  font-family: "Manrope", sans-serif;
-  font-size: 25px;
-  font-weight: 800;
-  letter-spacing: .18em;
-  transform: rotate(-15deg);
-  pointer-events: none;
-}
-
-.visa-page .visa-checks div {
-  border: 1px solid rgba(255,255,255,.055);
-  background: rgba(255,255,255,.06);
-  backdrop-filter: blur(10px);
 }
 
 .visa-page .visa-services {
@@ -152,10 +117,20 @@
 
 .visa-page .flag-icon {
   position: relative;
+  width: 76px;
+  height: 52px;
   overflow: hidden;
-  border-radius: 16px;
-  background: rgba(255,255,255,.92);
-  box-shadow: 0 10px 28px rgba(7,27,58,.08);
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(12,42,86,.10);
+  box-shadow: 0 10px 28px rgba(7,27,58,.10);
+}
+
+.visa-page .flag-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .visa-page .visa-cta-card {
@@ -196,17 +171,13 @@
   .visa-page .visa-hero-inner {
     min-height: auto;
     grid-template-columns: 1fr;
-    gap: 34px;
+    gap: 0;
     padding-top: 150px;
     padding-bottom: 78px;
   }
 
   .visa-page .visa-hero-inner::before {
     background: linear-gradient(180deg, rgba(3,17,39,.70) 0%, rgba(3,17,39,.92) 48%, #031127 100%);
-  }
-
-  .visa-page .visa-hero-card {
-    max-width: 720px;
   }
 }
 
@@ -228,5 +199,11 @@
 
   .visa-page .visa-hero-copy p {
     font-size: 15px;
+  }
+
+  .visa-page .flag-icon {
+    width: 62px;
+    height: 42px;
+    border-radius: 11px;
   }
 }
