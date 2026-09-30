@@ -1,5 +1,5 @@
 (function () {
-  const GIF_URL = 'https://raw.githubusercontent.com/adwiserglobal/Despachante-pastor/main/public/logo_animado.gif';
+  const GIF_URL = 'https://despachantepastor.vercel.app/logo_animado.gif';
 
   const style = document.createElement('style');
   style.textContent = `
@@ -7,8 +7,9 @@
       position: fixed;
       inset: 0;
       z-index: 2147483647;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: rgba(247, 249, 252, .96);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -24,22 +25,25 @@
       display: none !important;
     }
     .pastor-loading-inner {
-      width: min(360px, 82vw);
-      display: grid;
-      place-items: center;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .pastor-loading-inner img {
-      width: 100%;
+      width: 280px;
+      max-width: 72vw;
       height: auto;
       display: block;
       object-fit: contain;
+      margin: 0 auto;
     }
     html.pastor-loading-active,
     html.pastor-loading-active body {
       overflow: hidden !important;
     }
     @media (max-width: 640px) {
-      .pastor-loading-inner { width: min(300px, 84vw); }
+      .pastor-loading-inner img { width: 240px; max-width: 72vw; }
     }
   `;
   document.head.appendChild(style);
@@ -52,10 +56,18 @@
   overlay.setAttribute('aria-label', 'Carregando');
   overlay.innerHTML = `
     <div class="pastor-loading-inner">
-      <img src="${GIF_URL}" alt="Carregando" decoding="async" />
+      <img src="${GIF_URL}" alt="" decoding="async" />
     </div>
   `;
   document.body.appendChild(overlay);
+
+  const loaderImage = overlay.querySelector('img');
+  loaderImage.addEventListener('error', () => {
+    if (loaderImage.dataset.fallback === '1') return;
+    loaderImage.dataset.fallback = '1';
+    loaderImage.src = '/assets/logo.png';
+    loaderImage.style.width = '120px';
+  });
 
   let shownAt = 0;
   let timer = null;
