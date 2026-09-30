@@ -36,6 +36,18 @@
   font-size: 11px;
 }
 
+.client-portal-page .logout-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255,255,255,.06);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .client-portal-main {
   width: min(980px, calc(100% - 40px));
   margin: 0 auto;
