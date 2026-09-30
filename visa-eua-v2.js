@@ -284,6 +284,7 @@ async function ensureApplication() {
 async function submitApplication() {
   collectVisibleData();
   if (state.data.declaration !== true) {
+    await window.PastorLoader?.hide?.(200);
     alert('Você precisa aceitar a declaração antes de enviar.');
     return;
   }
