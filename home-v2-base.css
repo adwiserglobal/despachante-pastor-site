@@ -317,3 +317,31 @@
   .testimonial-track { animation: none; }
   .testimonial-set[aria-hidden='true'] { display: none; }
 }
+
+.contact-action.whatsapp-action {
+  background: #25d366;
+  border-color: #25d366;
+  color: #fff;
+}
+
+.contact-action.whatsapp-action:hover {
+  background: #1fbd5b;
+  border-color: #1fbd5b;
+}
+
+.contact-action.whatsapp-action .whatsapp-action-icon {
+  background: rgba(255,255,255,.16);
+  color: #fff;
+}
+
+.contact-action.whatsapp-action .whatsapp-action-icon svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.contact-action.whatsapp-action small,
+.contact-action.whatsapp-action strong,
+.contact-action.whatsapp-action b {
+  color: #fff;
+}
