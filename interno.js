@@ -147,10 +147,12 @@ async function enterApp(user) {
   gate.hidden = true;
   app.hidden = false;
   await loadAllData();
+  await window.PastorLoader?.hide?.(550);
 }
 
 async function rejectSession(message) {
   try { await signOut(auth); } catch {}
+  await window.PastorLoader?.hide?.(350);
   currentUser = null;
   app.hidden = true;
   gate.hidden = false;
@@ -160,6 +162,7 @@ async function rejectSession(message) {
 loginButton.addEventListener('click', async () => {
   clearLoginMessage();
   setLoginBusy(true);
+  window.PastorLoader?.show();
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
@@ -391,11 +394,13 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = null;
     app.hidden = true;
     gate.hidden = false;
+    await window.PastorLoader?.hide?.(0);
     return;
   }
 
   try {
     setLoginBusy(true);
+    window.PastorLoader?.show();
     if (!await confirmServerAccess(user)) {
       await rejectSession('Esta conta Google não está autorizada para a área interna.');
       return;
