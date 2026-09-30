@@ -14,6 +14,7 @@ const authSubtitle = document.querySelector('#auth-subtitle');
 let mode = 'login';
 
 function goPortal() {
+  window.PastorLoader?.show();
   window.location.href = './portal.html';
 }
 
@@ -50,6 +51,7 @@ form.addEventListener('submit', async (event) => {
   clearMessage();
   submitButton.disabled = true;
   submitButton.textContent = mode === 'signup' ? 'Criando conta...' : 'Entrando...';
+  window.PastorLoader?.show();
 
   const email = emailInput.value.trim();
   const password = passwordInput.value;
@@ -75,6 +77,7 @@ form.addEventListener('submit', async (event) => {
         return;
       }
 
+      await window.PastorLoader?.hide?.(550);
       showMessage('Conta criada. Confira seu e-mail para confirmar o cadastro. Depois da confirmação, você poderá acessar suas solicitações.', 'success');
       submitButton.disabled = false;
       submitButton.textContent = 'Criar conta';
@@ -88,6 +91,7 @@ form.addEventListener('submit', async (event) => {
     let message = error?.message || 'Não foi possível concluir a autenticação.';
     if (message.toLowerCase().includes('invalid login credentials')) message = 'E-mail ou senha incorretos.';
     if (message.toLowerCase().includes('already registered')) message = 'Este e-mail já possui uma conta. Tente entrar.';
+    await window.PastorLoader?.hide?.(450);
     showMessage(message);
     submitButton.disabled = false;
     submitButton.textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
@@ -96,5 +100,8 @@ form.addEventListener('submit', async (event) => {
 
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
-  if (data.session) goPortal();
+  if (data.session) {
+    window.PastorLoader?.show();
+    goPortal();
+  }
 })();
