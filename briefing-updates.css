@@ -26,3 +26,24 @@
 .floating-whatsapp:hover{background:#1fb85b;transform:translateY(-3px)}
 .floating-whatsapp svg{width:31px;height:31px}
 @media(max-width:640px){.floating-whatsapp{right:16px;bottom:16px;width:52px;height:52px}}
+
+.social-instagram{display:inline-flex!important;align-items:center;gap:7px;font-size:12px;font-weight:700;color:inherit}
+.social-instagram:hover{color:#d7b86c}.portal-instagram{color:#e3eaf3}
+.portal-section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.portal-new-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.portal-new-actions .button{min-height:43px;font-size:12px}
+.portal-family-note{font-size:13px;color:#6b778c;margin:0 0 18px}
+.portal-applications{display:grid;gap:14px}
+.portal-empty{padding:24px;border:1px solid #dfe5ed;background:#fff;border-radius:18px;color:#68778c;font-size:13px}
+.applicant-label{font-weight:700;color:#293b55!important}
+.family-application-dialog{width:min(480px,calc(100% - 30px));max-height:calc(100dvh - 32px);border:1px solid #e5e8ee;border-radius:24px;padding:0;box-shadow:0 22px 100px rgba(8,30,67,.23);background:#fff;color:#132746}
+.family-application-dialog::backdrop{background:rgba(4,18,40,.62);backdrop-filter:blur(6px)}
+.family-modal-form{padding:28px;display:grid;gap:12px}
+.family-modal-top{display:flex;align-items:center;justify-content:space-between}
+.family-modal-top button{font-size:25px;width:36px;height:36px;border-radius:50%;border:0;background:#f2f4f8;color:#384e6d;cursor:pointer}
+.family-modal-form h2{font:800 25px "Manrope",sans-serif;line-height:1.15;margin:5px 0 0}
+.family-modal-form p{font-size:13px;color:#6b788c;line-height:1.6;margin:0 0 8px}
+.family-modal-form label{font-size:12px;font-weight:700;color:#253b59}
+.family-modal-form input,.family-modal-form select{width:100%;min-height:49px;padding:0 14px;font:inherit;font-size:13px;border:1px solid #dbe3ed;border-radius:12px;color:#122b50;background:#fff}
+.family-modal-form .button{width:100%;margin-top:12px}
+@media(max-width:760px){.portal-section-head{align-items:flex-start}.portal-new-actions{width:100%}.portal-new-actions .button{flex:1;min-width:140px}.portal-instagram{font-size:0}.portal-instagram::before{content:"Instagram";font-size:12px}}
