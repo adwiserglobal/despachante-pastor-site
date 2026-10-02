@@ -31,15 +31,15 @@
     <main class="client-portal-main">
       <div class="client-portal-heading">
         <span class="client-portal-kicker">ÁREA DO CLIENTE</span>
-        <h1>Minhas solicitações</h1>
-        <p>Acompanhe seus processos e continue exatamente do ponto em que parou.</p>
+        <h1>Aplicações em andamento</h1>
+        <p>Continue seus questionários não enviados. Após o envio, os dados são encaminhados à equipe e não ficam disponíveis para edição.</p>
       </div>
 
       <div id="portal-loading" class="portal-loading">Carregando suas solicitações...</div>
 
       <div id="portal-content" class="request-list" hidden>
         <div class="portal-section-head">
-          <h2 class="portal-section-title">Solicitações e aplicações</h2>
+          <h2 class="portal-section-title">Questionários em andamento</h2>
           <div class="portal-new-actions">
             <button id="new-self-application" class="button button-secondary" type="button">Nova aplicação</button>
             <button id="new-family-application" class="button button-gold" type="button">Adicionar familiar +</button>
@@ -47,10 +47,7 @@
         </div>
         <p class="portal-family-note">Uma conta para toda a família. Cada pessoa tem seu próprio questionário, progresso e documentos.</p>
         <div id="portal-applications" class="portal-applications"></div>
-        <section id="portal-documents" class="portal-documents" aria-label="Documentos anexados">
-          <h2>Documentos anexados</h2>
-          <div id="portal-document-list">Seus anexos aparecerão aqui após o envio.</div>
-        </section>
+
       </div>
       <dialog id="family-application-dialog" class="family-application-dialog" aria-labelledby="family-modal-title">
         <form id="family-application-form" class="family-modal-form">
