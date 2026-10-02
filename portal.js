@@ -68,6 +68,44 @@ logoutButton.addEventListener('click', async () => {
     if (error) throw error;
 
     showApplicationState(application || null);
+    const {data: history, error: historyError} = await portalSb.from('visa_applications')
+      .select('id,country,status,current_step,form_data,created_at')
+      .eq('user_id', session.user.id).order('created_at',{ascending:false}).limit(50);
+    if(historyError) throw historyError;
+    const records=history||[];
+    const historical=document.querySelector('#other-requests');
+    const documents=document.querySelector('#portal-document-list');
+    historical.replaceChildren();
+    const completed=records.filter(item=>item.status!=='draft');
+    if(completed.length){
+      const title=document.createElement('h2');title.textContent='Solicitações anteriores';historical.appendChild(title);
+      completed.forEach(item=>{
+        const el=document.createElement('article');el.className='previous-request-card';
+        const name=document.createElement('strong');name.textContent=item.country==='US'?'Visto Americano':item.country;
+        const status=document.createElement('span');status.textContent=item.status==='submitted'?'Enviado':item.status;
+        el.append(name,status);historical.appendChild(el);
+      });
+    }
+    documents.replaceChildren();
+    const docs=records.flatMap(item=>['passport_file','previous_visa_file']
+      .map(key=>({key,path:item.form_data?.[key]}))).filter(item=>item.path);
+    if(!docs.length)documents.textContent='Nenhum documento anexado ainda.';
+    docs.forEach(doc=>{
+      const button=document.createElement('button');
+      button.className='portal-document-button';
+      button.textContent=doc.key==='passport_file'?'Passaporte ↗':'Visto anterior ↗';
+      button.addEventListener('click',async()=>{
+        const {data,error}=await portalSb.storage.from('visa-documents').createSignedUrl(doc.path,60);
+        if(error){alert('Não foi possível abrir este anexo.');return;}
+        window.open(data.signedUrl,'_blank','noopener,noreferrer');
+      });
+      documents.appendChild(button);
+    });
+    if(!application&&completed.length){
+      statusEl.textContent='Enviado';
+      descriptionEl.textContent='Seu questionário foi enviado. O acompanhamento será realizado pelo WhatsApp.';
+      continueApplicationLink.innerHTML='Iniciar nova aplicação <span aria-hidden="true">→</span>';
+    }
     loading.hidden = true;
     content.hidden = false;
     await window.PastorLoader?.hide?.(550);
