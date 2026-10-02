@@ -1,0 +1,10 @@
+/* Ajustes do briefing de 01/10/2026: respeita as cores e tipografia da marca. */
+.quote-vehicle-row{display:grid;grid-template-columns:minmax(110px,.42fr) 1fr;gap:12px}
+.quote-vehicle-row[hidden]{display:none!important}
+.quote-panel{scroll-margin-top:110px}
+.other-country-form{margin-top:15px}
+.other-country-form label{display:block;font-size:12px;font-weight:700;color:#172944;margin-bottom:8px}
+.other-country-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.other-country-controls input{flex:1 1 190px;min-width:0;min-height:49px;border:1px solid #dce4ee;border-radius:12px;padding:0 14px;font:inherit;color:#102443}
+.other-flag{display:grid;place-items:center;font-size:29px}
+@media(max-width:640px){.quote-vehicle-row{grid-template-columns:1fr}.other-country-controls>*{width:100%}}
