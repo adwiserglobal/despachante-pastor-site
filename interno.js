@@ -345,7 +345,7 @@ async function openVisa(row) {
       const text = humanValue(value);
       item.className = `visa-data-item${text.length > 100 ? ' full' : ''}`;
       item.appendChild(createText('small', fieldLabels[key] || key.replaceAll('_', ' ')));
-      if (['passport_file','previous_visa_file'].includes(key) && value) {
+      if (['passport_file','previous_visa_file','other_nationality_file'].includes(key) && value) {
         const button = document.createElement('button');
         button.className = 'detail-button';
         button.type = 'button';
