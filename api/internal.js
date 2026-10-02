@@ -235,6 +235,26 @@ export default async function handler(req, res) {
       return json(res, 200, { row: data });
     }
 
+    if (action === 'get_visa_document') {
+      const id = String(body.id || '');
+      const field = String(body.field || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id) || !['passport_file','previous_visa_file'].includes(field)) {
+        return json(res, 400, { error: 'Documento inválido.' });
+      }
+      const {data:application,error:applicationError} = await sb.from('visa_applications')
+        .select('id,user_id,form_data').eq('id',id).single();
+      if(applicationError || !application) return json(res,404,{error:'Aplicação não encontrada.'});
+      const path = application.form_data?.[field];
+      const permittedPrefix = application.user_id + '/' + application.id + '/' + field + '/';
+      if(typeof path !== 'string' || !path.startsWith(permittedPrefix)) {
+        return json(res,404,{error:'Documento não encontrado.'});
+      }
+      const {data,error} = await sb.storage.from('visa-documents').createSignedUrl(path,90);
+      if(error || !data?.signedUrl) return json(res,404,{error:'Não foi possível acessar este documento.'});
+      await audit(sb,user,'view_document','visa_applications',id);
+      return json(res,200,{url:data.signedUrl});
+    }
+
     if (action === 'update_visa_status') {
       const id = String(body.id || '');
       const status = String(body.status || '');
