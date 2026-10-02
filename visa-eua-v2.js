@@ -13,7 +13,7 @@ const steps = [
       { name: 'marital_status', label: 'Estado Civil', type: 'select', options: ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'União estável', 'Outro'] },
       { name: 'nationality', label: 'Nacionalidade', required: true },
       { name: 'other_nationality', label: 'Possui outra nacionalidade?', type: 'yesno' },
-      { name: 'other_nationality_name', label: 'Qual nacionalidade?', showIf: { other_nationality: 'sim' } },
+      { name: 'other_nationality_name', label: 'Qual nacionalidade?', required: true, showIf: { other_nationality: 'sim' } },
       { name: 'other_nationality_passport', label: 'Possui passaporte dessa nacionalidade?', type: 'yesno', showIf: { other_nationality: 'sim' } },
       { name: 'permanent_resident_elsewhere', label: 'Você é residente permanente de um país ou região diferente do seu país de origem?', type: 'yesno' },
       { name: 'rg', label: 'RG', hint: 'Número com dígito' },
@@ -28,7 +28,7 @@ const steps = [
       { name: 'business_phone', label: 'Nº telefone empresa', type: 'tel', hint: 'Com DDD' },
       { name: 'email', label: 'Endereço de E-mail', type: 'email', required: true, autocomplete: 'email' },
       { name: 'additional_email', label: 'Possui outro e-mail?', type: 'yesno' },
-      { name: 'additional_email_value', label: 'Qual e-mail?', type: 'email', showIf: { additional_email: 'sim' } },
+      { name: 'additional_email_value', label: 'Qual e-mail?', type: 'email', required: true, showIf: { additional_email: 'sim' } },
       { name: 'has_social_media', label: 'Você tem redes sociais?', type: 'yesno' },
       { name: 'social_media_1', label: '1 - Nome da plataforma e usuário', showIf: { has_social_media: 'sim' } },
       { name: 'social_media_2', label: '2 - Nome da plataforma e usuário', showIf: { has_social_media: 'sim' } },
@@ -44,7 +44,7 @@ const steps = [
     description: '',
     fields: [
       { name: 'travel_purpose', label: 'Motivo da viagem aos EUA', type: 'select', options: ['Turismo','Outro'], required: true },
-      { name: 'travel_purpose_other', label: 'Especifique o motivo da viagem', showIf: { travel_purpose: 'Outro' } },
+      { name: 'travel_purpose_other', label: 'Especifique o motivo da viagem', required: true, showIf: { travel_purpose: 'Outro' } },
       { name: 'specific_travel_plans', label: 'Você tem planos específicos de viagem?', type: 'yesno' },
       { name: 'arrival_date', label: 'Data prevista de chegada', hint: '(DD/MM/AAAA)' },
       { name: 'stay_duration', label: 'Duração prevista de permanência nos EUA' },
@@ -56,7 +56,7 @@ const steps = [
       { name: 'payer_relation', label: 'Relacionamento com você' },
       { name: 'payer_same_address', label: 'O endereço da pessoa que está pagando sua viagem é igual ao seu endereço residencial ou de correspondência?', type: 'yesno' },
       { name: 'travel_companions', label: 'Há outras pessoas viajando com você?', type: 'yesno' },
-      { name: 'travel_companions_details', label: 'Nome completo e grau de parentesco/relação (uma pessoa por linha)', type: 'textarea', showIf: { travel_companions: 'sim' } },
+      { name: 'travel_companions_details', label: 'Nome completo e grau de parentesco/relação (uma pessoa por linha)', type: 'textarea', required: true, showIf: { travel_companions: 'sim' } },
       { name: 'been_to_us', label: 'Você já esteve nos EUA?', type: 'yesno' },
       { name: 'last_us_arrival', label: 'Data da última chegada', hint: '(DD/MM/AAAA)', showIf: { been_to_us: 'sim' } },
       { name: 'last_us_stay', label: 'Tempo de permanência', showIf: { been_to_us: 'sim' } },
@@ -94,11 +94,12 @@ const steps = [
       { name: 'mother_in_us', label: 'Sua mãe está nos EUA?', type: 'yesno' },
       { name: 'spouse_last_name', label: 'Sobrenome do cônjuge' },
       { name: 'spouse_name', label: 'Nome do cônjuge' },
-      { name: 'spouse_birth', label: 'Data e local de Nascimento do cônjuge' },
+      { name: 'spouse_birth_date', label: 'Data de nascimento do cônjuge (DD/MM/AAAA)' },
+      { name: 'spouse_birth_place', label: 'Local de nascimento do cônjuge' },
       { name: 'close_relatives_us', label: 'Possui parentes próximos nos Estados Unidos (não incluindo seus pais)?', type: 'yesno' },
-      { name: 'close_relatives_details', label: 'Nome e grau de parentesco (uma pessoa por linha)', type: 'textarea', showIf: { close_relatives_us: 'sim' } },
+      { name: 'close_relatives_details', label: 'Nome e grau de parentesco (uma pessoa por linha)', type: 'textarea', required: true, showIf: { close_relatives_us: 'sim' } },
       { name: 'close_relatives_immigration_unknown', label: 'Não sei o status migratório', type: 'checkbox', showIf: { close_relatives_us: 'sim' } },
-      { name: 'close_relatives_immigration_status', label: 'Status migratório do parente', showIf: { close_relatives_us: 'sim', close_relatives_immigration_unknown: false } },
+      { name: 'close_relatives_immigration_status', label: 'Status migratório do parente', required: true, showIf: { close_relatives_us: 'sim', close_relatives_immigration_unknown: false } },
       { name: 'other_relatives_us', label: 'Você tem outro parente nos EUA?', type: 'yesno' },
     ],
   },
@@ -109,21 +110,23 @@ const steps = [
       { name: 'occupation', label: 'Ocupação principal', required: true },
       { name: 'employer_school', label: 'Nome do empregador atual ou escola' },
       { name: 'role', label: 'Função' },
-      { name: 'employment_dates', label: 'Datas de admissão e demissão' },
+      { name: 'employment_start', label: 'Data de admissão (DD/MM/AAAA)' },
+      { name: 'employment_end', label: 'Data de desligamento (DD/MM/AAAA), se houver' },
       { name: 'employer_address', label: 'Endereço Completo com CEP' },
       { name: 'employer_phone', label: 'Telefone', type: 'tel' },
       { name: 'monthly_income', label: 'Renda Mensal', hint: 'Para comprovar no dia da entrevista' },
       { name: 'previously_employed', label: 'Você esteve empregado anteriormente?', type: 'yesno' },
-      { name: 'previous_employer_name', label: 'Nome do empregador anterior', showIf: { previously_employed: 'sim' } },
-      { name: 'previous_employer_address', label: 'Endereço do empregador anterior', showIf: { previously_employed: 'sim' } },
-      { name: 'previous_job_title', label: 'Função / cargo anterior', showIf: { previously_employed: 'sim' } },
-      { name: 'previous_job_start', label: 'Data de admissão (DD/MM/AAAA)', date: true, showIf: { previously_employed: 'sim' } },
-      { name: 'previous_job_end', label: 'Data de desligamento (DD/MM/AAAA)', date: true, showIf: { previously_employed: 'sim' } },
+      { name: 'previous_employer_name', label: 'Nome do empregador anterior', required: true, showIf: { previously_employed: 'sim' } },
+      { name: 'previous_employer_address', label: 'Endereço do empregador anterior', required: true, showIf: { previously_employed: 'sim' } },
+      { name: 'previous_job_title', label: 'Função / cargo anterior', required: true, showIf: { previously_employed: 'sim' } },
+      { name: 'previous_job_start', label: 'Data de admissão (DD/MM/AAAA)', date: true, required: true, showIf: { previously_employed: 'sim' } },
+      { name: 'previous_job_end', label: 'Data de desligamento (DD/MM/AAAA)', date: true, required: true, showIf: { previously_employed: 'sim' } },
       { name: 'education_history', label: 'Cursou ou está cursando ensino médio ou superior?', type: 'yesno' },
       { name: 'institution_name', label: 'Nome da instituição' },
       { name: 'institution_address', label: 'Endereço completo com CEP' },
       { name: 'course_name', label: 'Nome do curso' },
-      { name: 'course_dates', label: 'Data de início e fim do curso' },
+      { name: 'course_start', label: 'Data de início do curso (DD/MM/AAAA)' },
+      { name: 'course_end', label: 'Data de término do curso (DD/MM/AAAA)' },
       { name: 'languages', label: 'Informe os idiomas que você fala' },
       { name: 'traveled_last_5_years', label: 'Você viajou para algum país nos últimos 5 anos?', type: 'yesno' },
       { name: 'countries_visited', label: 'Informe os países que visitou' },
@@ -141,7 +144,7 @@ const steps = [
       { name: 'firearms_training', label: 'Possui habilidade ou treinamento com arma de fogo?', type: 'yesno' },
       { name: 'additional_notes', label: 'Observações adicionais', type: 'textarea' },
       { name: 'passport_file', label: 'Foto ou cópia do passaporte', type: 'file', required: true },
-      { name: 'previous_visa_file', label: 'Foto ou cópia do visto anterior', type: 'file', showIf: { had_us_visa: 'sim' } },
+      { name: 'previous_visa_file', label: 'Foto ou cópia do visto anterior', type: 'file', required: true, showIf: { had_us_visa: 'sim' } },
       { name: 'declaration', label: 'Declaro que as informações declaradas acima são verdadeiras e que estou ciente que a omissão de informações ou a apresentação de dados ou documentos falsos e/ou divergentes podem comprometer o processo de visto.', type: 'checkbox', required: true },
     ],
   },
@@ -156,6 +159,7 @@ const state = {
   saving: false,
   reviewing: false,
   submitting: false,
+  uploading: false,
 };
 
 const loading = document.querySelector('#application-loading');
@@ -178,16 +182,23 @@ function escapeHtml(value = '') {
 }
 
 function inputFor(field) {
-  const value = state.data[field.name] ?? '';
+  const rawValue = state.data[field.name] ?? '';
+  const value = field.type === 'checkbox' ? rawValue : window.VisaValidation.format(field.name,rawValue);
   const req = field.required ? 'required' : '';
+  const mark = field.required ? ' *' : '';
   const autocomplete = field.autocomplete ? `autocomplete="${field.autocomplete}"` : '';
   const placeholder = field.placeholder ? `placeholder="${escapeHtml(field.placeholder)}"` : '';
   const hint = field.hint ? `<span class="field-hint">${escapeHtml(field.hint)}</span>` : '';
 
   if (field.type === 'file') {
     const path = state.data[field.name];
-    const fileName = path ? String(path).split('/').pop().replace(/^\d+_/, '') : '';
-    return `<div class="field-group"><label for="${field.name}">${escapeHtml(field.label)}${field.required ? ' *' : ''}</label><input id="${field.name}" type="file" name="${field.name}" accept="image/jpeg,image/png,image/webp,application/pdf" ${!path && field.required ? 'required' : ''}><small class="field-hint">${path ? 'Anexado: ' + escapeHtml(fileName) + '. Selecione outro arquivo para substituir.' : 'JPG, PNG, WebP ou PDF, até 10 MB.'}</small></div>`;
+    const fileName = path ? String(path).split('/').pop().replace(/^\\d+_/, '') : '';
+    return `<div class="field-group"><label for="${field.name}">${escapeHtml(field.label)}${mark}</label>
+      <input id="${field.name}" type="file" name="${field.name}" accept="image/jpeg,image/png,image/webp,application/pdf"
+      ${!path && field.required ? 'required' : ''} aria-describedby="${field.name}-hint">
+      <small id="${field.name}-hint" class="field-hint">${path
+        ? 'Anexado: ' + escapeHtml(fileName) + '. Selecione outro arquivo para substituir.'
+        : 'JPG, PNG, WebP ou PDF, até 10 MB.'}</small></div>`;
   }
   if (field.type === 'checkbox') {
     return `<label class="declaration-box"><input type="checkbox" name="${field.name}" ${value === true ? 'checked' : ''} ${req}><span>${escapeHtml(field.label)}</span></label>`;
@@ -197,16 +208,25 @@ function inputFor(field) {
   if (field.type === 'yesno') {
     control = `<select name="${field.name}" ${req}><option value="">Selecione...</option><option value="sim" ${value === 'sim' ? 'selected' : ''}>Sim</option><option value="nao" ${value === 'nao' ? 'selected' : ''}>Não</option></select>`;
   } else if (field.type === 'select') {
-    control = `<select name="${field.name}" ${req}><option value="">Selecione...</option>${field.options.map((option) => `<option value="${escapeHtml(option)}" ${value === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select>`;
+    control = `<select name="${field.name}" ${req}><option value="">Selecione...</option>${field.options.map(option =>
+      `<option value="${escapeHtml(option)}" ${value === option ? 'selected' : ''}>${escapeHtml(option)}</option>`
+    ).join('')}</select>`;
   } else if (field.type === 'textarea') {
     control = `<textarea name="${field.name}" ${req} ${placeholder}>${escapeHtml(value)}</textarea>`;
   } else {
-    control = `<input name="${field.name}" type="${field.type || 'text'}" value="${escapeHtml(value)}" ${field.date || /_date$|^birth_date$|^last_us_arrival$|^previous_job_(start|end)$/.test(field.name) ? 'inputmode="numeric" maxlength="10" placeholder="DD/MM/AAAA" pattern="(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\\d{4}"' : ''} ${req} ${autocomplete} ${placeholder}>`;
+    const numericDate = window.VisaValidation.dateFields.has(field.name);
+    const extra = numericDate
+      ? 'inputmode="numeric" maxlength="10" placeholder="DD/MM/AAAA"'
+      : field.name === 'cpf' ? 'inputmode="numeric" maxlength="14" placeholder="000.000.000-00"'
+      : field.name === 'passport_number' ? 'maxlength="24" autocapitalize="characters"'
+      : ['primary_phone','secondary_phone','business_phone','payer_phone','employer_phone'].includes(field.name)
+        ? 'inputmode="tel" maxlength="19"'
+      : field.name === 'monthly_income' ? 'inputmode="decimal"' : '';
+    control = `<input name="${field.name}" type="${field.type || 'text'}" value="${escapeHtml(value)}" ${extra} ${req} ${autocomplete} ${placeholder}>`;
   }
 
-  return `<div class="field-group"><label>${escapeHtml(field.label)}${field.required ? ' *' : ''}</label>${hint}${control}</div>`;
+  return `<div class="field-group"><label>${escapeHtml(field.label)}${mark}</label>${hint}${control}</div>`;
 }
-
 
 function isFieldVisible(field) {
   if (!field.showIf) return true;
