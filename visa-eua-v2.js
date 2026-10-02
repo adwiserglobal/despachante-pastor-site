@@ -244,38 +244,45 @@ function refreshConditionalFields() {
 }
 
 async function uploadDocument(event) {
-  const element = event.currentTarget;
-  const file = element.files?.[0];
-  if (!file) return;
-  if (!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type) || file.size > 10485760) {
+  const element=event.currentTarget;
+  const file=element.files?.[0];
+  if(!file)return;
+  if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type)
+     || file.size===0 || file.size>10485760) {
+    element.value='';
     alert('Selecione uma imagem JPG, PNG, WebP ou PDF de até 10 MB.');
-    element.value = '';
     return;
   }
-  const fieldName = element.name;
-  const previousPath = state.data[fieldName];
-  element.disabled = true;
+  if(state.uploading)return;
+  const fieldName=element.name;
+  const previousPath=state.data[fieldName];
+  const safeName=file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]/g,'_').slice(-85);
+  const path=`${state.user.id}/${state.application.id}/${fieldName}/${Date.now()}_${safeName}`;
+  state.uploading=true;
+  element.disabled=true;
+  nextButton.disabled=true;
   setSaveState('saving','Enviando documento...');
-  const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]/g,'_').slice(-85);
-  const path = `${state.user.id}/${state.application.id}/${fieldName}/${Date.now()}_${safeName}`;
-  const { error } = await sb.storage.from('visa-documents').upload(path,file,{contentType:file.type,upsert:false});
-  element.disabled = false;
-  if (error) {
-    console.error(error);
-    alert('Não foi possível anexar o documento. Tente novamente.');
-    setSaveState('','Falha ao anexar');
-    return;
-  }
-  state.data[fieldName] = path;
-  const persisted = await saveDraft(false);
-  if (!persisted) {
-    alert('O arquivo foi enviado, mas não foi possível salvar a referência. Tente novamente antes de sair.');
-    return;
-  }
-  setSaveState('saved','Documento anexado');
-  renderStep();
-  if (previousPath && previousPath !== path) {
-    sb.storage.from('visa-documents').remove([previousPath]).catch(console.error);
+  try {
+    const {error}=await sb.storage.from('visa-documents').upload(path,file,{
+      contentType:file.type,upsert:false
+    });
+    if(error)throw error;
+    state.data[fieldName]=path;
+    const saved=await saveDraft(false);
+    if(!saved)throw new Error('O arquivo foi enviado, mas não foi possível salvar o vínculo. Tente salvar novamente.');
+    setSaveState('saved','Documento anexado');
+    if(previousPath && previousPath!==path){
+      sb.storage.from('visa-documents').remove([previousPath]).catch(console.error);
+    }
+    renderStep();
+  } catch(error) {
+    console.error('Falha no upload do documento:',error);
+    setSaveState('','Não foi possível concluir o anexo');
+    alert(error.message || 'Não foi possível anexar o documento. Tente novamente.');
+  } finally {
+    state.uploading=false;
+    element.disabled=false;
+    nextButton.disabled=false;
   }
 }
 
@@ -536,7 +543,7 @@ async function submitApplication() {
     await window.PastorLoader?.hide?.(550);
     alert('Não foi possível enviar agora. Seu progresso continua salvo. Tente novamente.');
     nextButton.disabled = false;
-    nextButton.textContent = 'Enviar Questionário';
+    nextButton.textContent = 'Confirmar e enviar';
     return;
   }
 
@@ -551,38 +558,51 @@ async function submitApplication() {
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!form.reportValidity()) return;
-  if (state.submitting) return;
-  state.submitting = true;
+  if(state.submitting || state.uploading)return;
+  if(!form.reportValidity())return;
+  if(!state.reviewing){
+    const issue=validateStep(state.currentStep,true);
+    if(issue)return;
+  }
+  state.submitting=true;
   window.PastorLoader?.show();
-  collectVisibleData();
-  const saved = await saveDraft(false);
-  if (!saved) {
-    await window.PastorLoader?.hide?.(0);
-    state.submitting = false;
-    alert('Não foi possível salvar seu progresso. Verifique a conexão e tente novamente.');
-    return;
-  }
+  try {
+    collectVisibleData();
+    const saved=await saveDraft(false);
+    if(!saved)throw new Error('Não foi possível salvar o seu progresso. Verifique a conexão e tente novamente.');
 
-  if (state.currentStep < steps.length - 1) {
-    state.currentStep += 1;
-    renderStep();
-    const stepSaved = await saveDraft(false);
-    if (!stepSaved) setSaveState('', 'Falha ao salvar a etapa');
-    await window.PastorLoader?.hide?.(500);
-    state.submitting = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
-  }
+    if(state.currentStep<steps.length-1){
+      const previousStep=state.currentStep;
+      state.currentStep+=1;
+      const nextSaved=await saveDraft(false);
+      if(!nextSaved){
+        state.currentStep=previousStep;
+        renderStep();
+        throw new Error('Não foi possível salvar a próxima etapa. Tente novamente.');
+      }
+      renderStep();
+      window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
 
-  if (!state.reviewing) {
-    renderReview();
-    await window.PastorLoader?.hide?.(350);
-    state.submitting = false;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
+    const problem=validateAllSteps();
+    if(problem){
+      reportWholeFormError(problem);
+      throw new Error('Verifique o campo "'+problem.label+'" antes de continuar.');
+    }
+    if(!state.reviewing){
+      renderReview();
+      window.scrollTo({top:0,behavior:'smooth'});
+      return;
+    }
+    await submitApplication();
+  } catch(error) {
+    console.error(error);
+    alert(error.message || 'Não foi possível continuar. Tente novamente.');
+  } finally {
+    state.submitting=false;
+    await window.PastorLoader?.hide?.(450);
   }
-  try { await submitApplication(); } finally { state.submitting = false; }
 });
 
 prevButton.addEventListener('click', async () => {
