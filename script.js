@@ -118,26 +118,51 @@ if (isHomePage) {
             <label class="quote-field"><input name="email" type="email" placeholder="Seu e-mail" autocomplete="email" required></label>
           </div>
           <label class="quote-field"><input name="phone" type="tel" placeholder="Seu telefone com DDD" autocomplete="tel" required></label>
-          <label class="quote-field"><input name="vehicle_plate" type="text" placeholder="Placa do veículo (opcional)" autocomplete="off" maxlength="10"></label>
           <label class="quote-field">
-            <select name="service">
-              <option value="">Qual serviço você precisa? (opcional)</option>
-              <option value="documentacao-veicular">Documentação veicular</option>
-              <option value="transferencia">Transferência de veículo</option>
-              <option value="regularizacao">Regularização</option>
-              <option value="vistos">Vistos e serviços internacionais</option>
-              <option value="outro">Outro serviço</option>
+            <select name="service" id="quote-service" aria-label="Qual serviço você precisa?">
+              <option value="">Qual serviço você precisa?</option>
+              <optgroup label="Veículos">
+                <option value="transferencia">Transferência de veículos</option>
+                <option value="licenciamento">Licenciamento</option>
+                <option value="liberacao-patio">Liberação de pátio</option>
+                <option value="documentacao-veicular">Outros serviços veiculares</option>
+              </optgroup>
+              <optgroup label="Vistos e Passaportes">
+                <option value="vistos">Vistos e Passaportes</option>
+              </optgroup>
+              <optgroup label="Demais serviços">
+                <option value="certificado-digital">Certificado Digital</option>
+                <option value="outro">Outros</option>
+              </optgroup>
             </select>
           </label>
+          <div class="quote-vehicle-row" id="quote-vehicle-row">
+            <label class="quote-field"><select name="vehicle_id_type" id="quote-vehicle-id-type" aria-label="Tipo de identificação"><option value="placa">Placa</option><option value="renavam">RENAVAM</option></select></label>
+            <label class="quote-field"><input name="vehicle_plate" type="text" id="quote-vehicle-identifier" placeholder="Placa do veículo (opcional)" autocomplete="off" maxlength="11"></label>
+          </div>
           <button class="button button-gold quote-submit" type="submit">Solicitar orçamento <span aria-hidden="true">↗</span></button>
           <div class="quote-status" id="quote-status" role="status" aria-live="polite"></div>
-          <div class="quote-note"><span aria-hidden="true">⌁</span> Seus dados serão usados apenas para retorno do atendimento.</div>
+          <div class="quote-note">Ao clicar em solicitar orçamento, você concorda com a política de privacidade.</div>
         </form>
       </div>
     `;
 
     const quoteForm = document.querySelector('#quote-form');
     const quoteStatus = document.querySelector('#quote-status');
+    const quoteService = quoteForm.querySelector('#quote-service');
+    const vehicleRow = quoteForm.querySelector('#quote-vehicle-row');
+    const vehicleIdType = quoteForm.querySelector('#quote-vehicle-id-type');
+    const vehicleIdentifier = quoteForm.querySelector('#quote-vehicle-identifier');
+    const updateVehicleField = () => {
+      const value = quoteService.value;
+      vehicleRow.hidden = !!value && !['transferencia','licenciamento','liberacao-patio','documentacao-veicular'].includes(value);
+      vehicleIdentifier.placeholder = vehicleIdType.value === 'renavam' ? 'RENAVAM (opcional)' : 'Placa do veículo (opcional)';
+      vehicleIdentifier.maxLength = vehicleIdType.value === 'renavam' ? 11 : 7;
+      vehicleIdentifier.inputMode = vehicleIdType.value === 'renavam' ? 'numeric' : 'text';
+    };
+    quoteService.addEventListener('change', updateVehicleField);
+    vehicleIdType.addEventListener('change', () => { vehicleIdentifier.value = ''; updateVehicleField(); });
+    updateVehicleField();
     quoteForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const button = quoteForm.querySelector('button[type="submit"]');
@@ -146,7 +171,7 @@ if (isHomePage) {
         name: String(data.get('name') || '').trim(),
         email: String(data.get('email') || '').trim(),
         phone: String(data.get('phone') || '').trim(),
-        vehicle_plate: String(data.get('vehicle_plate') || '').trim() || null,
+        vehicle_plate: String(data.get('vehicle_plate') || '').trim() ? (data.get('vehicle_id_type') === 'renavam' ? 'RENAVAM: ' : '') + String(data.get('vehicle_plate')).trim().toUpperCase() : null,
         service: String(data.get('service') || '').trim() || null,
       };
 
@@ -173,6 +198,7 @@ if (isHomePage) {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         quoteForm.reset();
+        updateVehicleField();
         quoteStatus.className = 'quote-status show success';
         quoteStatus.textContent = 'Solicitação enviada. A equipe do Despachante Pastor entrará em contato com você.';
       } catch (error) {
