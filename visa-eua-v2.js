@@ -334,7 +334,11 @@ function scheduleSave() {
 }
 
 async function saveDraft(showState = true) {
-  if (!state.application || state.saving) return;
+  if (!state.application) return false;
+  if (state.saving) {
+    await new Promise(resolve => setTimeout(resolve, 120));
+    return saveDraft(showState);
+  }
   collectVisibleData();
   state.saving = true;
   if (showState) setSaveState('saving', 'Salvando...');
@@ -348,29 +352,49 @@ async function saveDraft(showState = true) {
   if (error) {
     setSaveState('', 'Falha ao salvar');
     console.error(error);
-    return;
+    return false;
   }
   setSaveState('saved', 'Progresso salvo');
+  return true;
 }
 
 async function ensureApplication() {
-  const { data: existing, error: existingError } = await sb
-    .from('visa_applications')
-    .select('*')
-    .eq('user_id', state.user.id)
-    .eq('country', 'US')
-    .eq('status', 'draft')
-    .maybeSingle();
+  const params = new URLSearchParams(window.location.search);
+  const requestedId = params.get('application');
+  const createNew = params.get('new') === '1';
 
-  if (existingError) throw existingError;
-  if (existing) return existing;
+  if (requestedId) {
+    const {data, error} = await sb.from('visa_applications').select('*')
+      .eq('id',requestedId).eq('user_id',state.user.id).eq('country','US').maybeSingle();
+    if(error)throw error;
+    if(!data)throw new Error('Aplicação não encontrada nesta conta.');
+    if(data.status!=='draft')throw new Error('Esta aplicação já foi enviada. Acompanhe na área do cliente.');
+    return data;
+  }
 
-  const { data: created, error } = await sb
-    .from('visa_applications')
-    .insert({ user_id: state.user.id, country: 'US', status: 'draft' })
-    .select('*')
-    .single();
-  if (error) throw error;
+  if (!createNew) {
+    const {data, error} = await sb.from('visa_applications').select('*')
+      .eq('user_id',state.user.id).eq('country','US').eq('status','draft')
+      .order('updated_at',{ascending:false}).limit(1);
+    if(error)throw error;
+    if(data?.length)return data[0];
+  }
+
+  const permittedRelations = new Set(['Titular','Cônjuge','Filho(a)','Pai','Mãe','Irmão(ã)','Avô/Avó','Neto(a)','Outro familiar']);
+  const relationship = params.get('relationship') || 'Titular';
+  if(!permittedRelations.has(relationship))throw new Error('Selecione um grau de parentesco válido.');
+  const name=(params.get('applicant_name') || '').trim().slice(0,160);
+  if(relationship!=='Titular' && !name)throw new Error('Informe o nome completo do familiar.');
+  const formData = {applicant_relationship:relationship};
+  if(name) {
+    formData.applicant_name=name;
+    formData.full_name=name;
+  }
+  const {data:created,error} = await sb.from('visa_applications').insert({
+    user_id:state.user.id,country:'US',status:'draft',form_data:formData,current_step:0
+  }).select('*').single();
+  if(error)throw error;
+  window.history.replaceState(null,'','/vistos/estados-unidos?application='+encodeURIComponent(created.id));
   return created;
 }
 
@@ -426,12 +450,19 @@ form.addEventListener('submit', async (event) => {
   state.submitting = true;
   window.PastorLoader?.show();
   collectVisibleData();
-  await saveDraft(false);
+  const saved = await saveDraft(false);
+  if (!saved) {
+    await window.PastorLoader?.hide?.(0);
+    state.submitting = false;
+    alert('Não foi possível salvar seu progresso. Verifique a conexão e tente novamente.');
+    return;
+  }
 
   if (state.currentStep < steps.length - 1) {
     state.currentStep += 1;
     renderStep();
-    await saveDraft(false);
+    const stepSaved = await saveDraft(false);
+    if (!stepSaved) setSaveState('', 'Falha ao salvar a etapa');
     await window.PastorLoader?.hide?.(500);
     state.submitting = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -482,6 +513,10 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
     userEmail.textContent = session.user.email || '';
     state.application = await ensureApplication();
     state.data = state.application.form_data || {};
+    const applicationName = state.data.full_name || state.data.applicant_name || 'Titular';
+    const applicantRelation = state.data.applicant_relationship || 'Titular';
+    const applicationSubtitle = document.querySelector('.application-title small');
+    if(applicationSubtitle)applicationSubtitle.textContent = applicationName + ' · ' + applicantRelation;
     if (!state.data.email && session.user.email) state.data.email = session.user.email;
     state.currentStep = Math.max(0, Math.min(Number(state.application.current_step || 0), steps.length - 1));
     loading.hidden = true;
