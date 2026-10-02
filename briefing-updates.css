@@ -47,3 +47,12 @@
 .family-modal-form input,.family-modal-form select{width:100%;min-height:49px;padding:0 14px;font:inherit;font-size:13px;border:1px solid #dbe3ed;border-radius:12px;color:#122b50;background:#fff}
 .family-modal-form .button{width:100%;margin-top:12px}
 @media(max-width:760px){.portal-section-head{align-items:flex-start}.portal-new-actions{width:100%}.portal-new-actions .button{flex:1;min-width:140px}.portal-instagram{font-size:0}.portal-instagram::before{content:"Instagram";font-size:12px}}
+
+.success-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px}
+.success-actions .button{min-height:48px}
+.floating-phone{position:fixed;right:89px;bottom:26px;z-index:449;width:51px;height:51px;display:grid;place-items:center;border-radius:50%;background:#071b3a;color:white;text-decoration:none;font-size:21px;box-shadow:0 10px 27px rgba(5,20,47,.19)}
+.floating-phone:hover{background:#173e70}
+.contact-phone-link{font-weight:700}
+.validation-feedback{color:#b42336!important;font-size:11px;line-height:1.5}
+.field-invalid{border-color:#c84555!important;box-shadow:0 0 0 3px rgba(200,69,85,.07)!important}
+@media(max-width:640px){.floating-phone{right:78px;bottom:17px;width:47px;height:47px}.success-actions{flex-direction:column}.success-actions .button{width:100%}}
