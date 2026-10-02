@@ -314,6 +314,7 @@ if (isHomePage) {
     const visaNames = {
       'estados-unidos': 'Estados Unidos',
       china: 'China',
+      mexico: 'México',
       'arabia-saudita': 'Arábia Saudita',
       mocambique: 'Moçambique',
     };
