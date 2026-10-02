@@ -97,15 +97,9 @@ function renderApplications(applications) {
     return;
   }
   const drafts = applications.filter(a => a.status === 'draft');
-  const previous = applications.filter(a => a.status !== 'draft');
+  const previous = [];
   drafts.forEach(a => applicationList.appendChild(createApplicationCard(a)));
-  if (previous.length) {
-    const heading = document.createElement('h2');
-    heading.className = 'portal-section-title';
-    heading.textContent = 'Solicitações anteriores';
-    applicationList.appendChild(heading);
-    previous.forEach(a => applicationList.appendChild(createApplicationCard(a)));
-  }
+
 }
 
 function renderDocuments(applications) {
@@ -173,12 +167,17 @@ logoutButton.addEventListener('click', async () => {
       .select('id,country,status,current_step,form_data,created_at,updated_at')
       .eq('user_id',session.user.id)
       .eq('country','US')
+      .eq('status','draft')
       .order('updated_at',{ascending:false})
       .limit(100);
     if(error)throw error;
     const applications=data||[];
     renderApplications(applications);
-    renderDocuments(applications);
+    if (new URLSearchParams(location.search).get('add_family') === '1') {
+      familyDialog.showModal();
+      history.replaceState(null,'','/portal.html');
+    }
+    // Os anexos de questionários enviados não ficam acessíveis ao cliente.
     loading.hidden=true;
     content.hidden=false;
     await window.PastorLoader?.hide?.(550);
