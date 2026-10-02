@@ -38,38 +38,42 @@
       <div id="portal-loading" class="portal-loading">Carregando suas solicitações...</div>
 
       <div id="portal-content" class="request-list" hidden>
-        <h2 class="portal-section-title">Solicitações e aplicações</h2>
-        <article class="request-card">
-          <div class="request-country" aria-label="Bandeira dos Estados Unidos" role="img">🇺🇸</div>
-
-          <div class="request-copy">
-            <div class="request-meta">
-              <h2>Visto Americano</h2>
-              <span class="request-status" id="us-visa-status">Em andamento</span>
-            </div>
-            <p id="us-visa-description">Sua aplicação está salva e pode ser retomada a qualquer momento.</p>
-
-            <div class="request-progress" id="us-visa-progress">
-              <div class="request-progress-label">
-                <span id="us-visa-step-label">Etapa 1 de 5</span>
-                <span id="us-visa-percent">20%</span>
-              </div>
-              <div class="request-progress-track" aria-hidden="true">
-                <div class="request-progress-fill" id="us-visa-progress-fill"></div>
-              </div>
-            </div>
+        <div class="portal-section-head">
+          <h2 class="portal-section-title">Solicitações e aplicações</h2>
+          <div class="portal-new-actions">
+            <button id="new-self-application" class="button button-secondary" type="button">Nova aplicação</button>
+            <button id="new-family-application" class="button button-gold" type="button">Adicionar familiar +</button>
           </div>
-
-          <a class="request-continue" href="/vistos/estados-unidos">
-            Continuar aplicação <span aria-hidden="true">→</span>
-          </a>
-        </article>
-        <section id="other-requests" class="other-requests" aria-label="Solicitações anteriores"></section>
+        </div>
+        <p class="portal-family-note">Uma conta para toda a família. Cada pessoa tem seu próprio questionário, progresso e documentos.</p>
+        <div id="portal-applications" class="portal-applications"></div>
         <section id="portal-documents" class="portal-documents" aria-label="Documentos anexados">
           <h2>Documentos anexados</h2>
           <div id="portal-document-list">Seus anexos aparecerão aqui após o envio.</div>
         </section>
       </div>
+      <dialog id="family-application-dialog" class="family-application-dialog" aria-labelledby="family-modal-title">
+        <form id="family-application-form" class="family-modal-form">
+          <div class="family-modal-top"><span class="client-portal-kicker">VISTO AMERICANO</span><button id="family-modal-close" type="button" aria-label="Fechar">×</button></div>
+          <h2 id="family-modal-title">Nova aplicação para familiar</h2>
+          <p>Informe quem vai solicitar o visto. O questionário e os documentos serão exclusivos dessa pessoa.</p>
+          <label for="family-member-name">Nome completo do familiar</label>
+          <input id="family-member-name" name="applicant_name" type="text" maxlength="160" autocomplete="off" placeholder="Nome completo" required />
+          <label for="family-member-relation">Grau de parentesco</label>
+          <select id="family-member-relation" name="relationship" required>
+            <option value="">Selecione...</option>
+            <option value="Cônjuge">Cônjuge</option>
+            <option value="Filho(a)">Filho(a)</option>
+            <option value="Pai">Pai</option>
+            <option value="Mãe">Mãe</option>
+            <option value="Irmão(ã)">Irmão(ã)</option>
+            <option value="Avô/Avó">Avô/Avó</option>
+            <option value="Neto(a)">Neto(a)</option>
+            <option value="Outro familiar">Outro familiar</option>
+          </select>
+          <button type="submit" class="button button-gold button-large">Continuar para o questionário →</button>
+        </form>
+      </dialog>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
