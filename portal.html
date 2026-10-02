@@ -37,6 +37,7 @@
       <div id="portal-loading" class="portal-loading">Carregando suas solicitações...</div>
 
       <div id="portal-content" class="request-list" hidden>
+        <h2 class="portal-section-title">Solicitações e aplicações</h2>
         <article class="request-card">
           <div class="request-country" aria-label="Bandeira dos Estados Unidos" role="img">🇺🇸</div>
 
@@ -62,11 +63,17 @@
             Continuar aplicação <span aria-hidden="true">→</span>
           </a>
         </article>
+        <section id="other-requests" class="other-requests" aria-label="Solicitações anteriores"></section>
+        <section id="portal-documents" class="portal-documents" aria-label="Documentos anexados">
+          <h2>Documentos anexados</h2>
+          <div id="portal-document-list">Seus anexos aparecerão aqui após o envio.</div>
+        </section>
       </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./supabase-client.js"></script>\n    <script src="./loading-screen.js"></script>
+    <script src="./supabase-client.js"></script>
+    <script src="./loading-screen.js"></script>
     <script src="./portal.js"></script>
   </body>
 </html>
