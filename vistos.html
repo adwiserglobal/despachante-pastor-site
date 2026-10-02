@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#071b3a" />
-    <meta name="description" content="Assessoria do Despachante Pastor para processos de visto dos Estados Unidos, China, Arábia Saudita e Moçambique." />
+    <meta name="description" content="Assessoria do Despachante Pastor para processos de visto dos Estados Unidos, México, China e Arábia Saudita." />
     <meta property="og:title" content="Vistos | Despachante Pastor" />
     <meta property="og:description" content="Assessoria documental para processos de visto com organização, clareza e acompanhamento." />
     <meta property="og:type" content="website" />
@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./briefing-updates.css" />
     <link rel="stylesheet" href="./enhancements.css" />
     <link rel="stylesheet" href="./portal.css" />
   </head>
@@ -51,8 +52,8 @@
         <section class="visa-hero">
           <div class="container visa-hero-inner">
             <div class="visa-hero-copy reveal is-visible">
-              <h1>Seu próximo destino começa com um processo <span>bem orientado.</span></h1>
-              <p>Assessoria documental para solicitações de visto, com apoio na organização das informações, conferência dos documentos e acompanhamento das etapas do processo.</p>
+              <h1><span>VISTOS</span> e assessoria para sua próxima viagem.</h1>
+              <p>Assessoria completa e triagem documental. Conte com orientação personalizada em cada etapa da solicitação.</p>
               <div class="hero-actions">
                 <a class="button button-gold button-large" href="#destinos">Ver destinos <span aria-hidden="true">↓</span></a>
                 <a class="button button-ghost button-large" href="./index.html#contato">Falar com o atendimento</a>
@@ -109,13 +110,27 @@
               </article>
 
               <article class="visa-list-item reveal is-visible">
-                <div class="flag-icon" role="img" aria-label="Bandeira de Moçambique"><img src="https://flagcdn.com/w160/mz.png" alt="Bandeira de Moçambique" loading="lazy" /></div>
+                <div class="flag-icon" role="img" aria-label="Bandeira do México"><img src="https://flagcdn.com/w160/mx.png" alt="Bandeira de México" loading="lazy" /></div>
                 <div class="visa-list-content">
-                  <div class="visa-list-meta"><h3>Moçambique</h3><span class="visa-status">Assessoria sob consulta</span></div>
-                  <p>Apoio na organização do processo documental para solicitações de visto de Moçambique, com orientação clara sobre os próximos passos.</p>
+                  <div class="visa-list-meta"><h3>México</h3><span class="visa-status">Assessoria sob consulta</span></div>
+                  <p>Apoio na organização do processo documental para solicitações de visto de México, com orientação clara sobre os próximos passos.</p>
                 </div>
                 <div class="visa-list-actions">
-                  <a class="button button-secondary" href="./index.html?visto=mocambique#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                  <a class="button button-secondary" href="./index.html?visto=mexico#contato">Solicitar assessoria <span aria-hidden="true">↗</span></a>
+                </div>
+              </article>
+              <article class="visa-list-item reveal is-visible">
+                <div class="flag-icon other-flag" aria-hidden="true">🌐</div>
+                <div class="visa-list-content">
+                  <div class="visa-list-meta"><h3>Outros destinos</h3><span class="visa-status">Sob consulta</span></div>
+                  <p>Não encontrou seu país? Informe o destino e nossa equipe orientará os próximos passos.</p>
+                  <form id="other-country-form" class="other-country-form">
+                    <label for="other-country">País de destino</label>
+                    <div class="other-country-controls">
+                      <input id="other-country" name="country" type="text" required maxlength="80" placeholder="Ex.: Portugal" />
+                      <button type="submit" class="button button-secondary">Solicitar assessoria ↗</button>
+                    </div>
+                  </form>
                 </div>
               </article>
             </div>
@@ -158,5 +173,13 @@
     </div>
 
     <script src="./script.js"></script>
+    <script>
+      document.querySelector('#other-country-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const country = document.querySelector('#other-country').value.trim();
+        if (!country) return;
+        window.open('https://wa.me/551144382633?text=' + encodeURIComponent('Olá! Gostaria de solicitar assessoria para visto de ' + country + '.'), '_blank', 'noopener,noreferrer');
+      });
+    </script>
   </body>
 </html>
