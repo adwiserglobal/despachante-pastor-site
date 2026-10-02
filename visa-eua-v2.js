@@ -30,8 +30,8 @@ const steps = [
       { name: 'additional_email', label: 'Possui outro e-mail?', type: 'yesno' },
       { name: 'additional_email_value', label: 'Qual e-mail?', type: 'email', showIf: { additional_email: 'sim' } },
       { name: 'has_social_media', label: 'Você tem redes sociais?', type: 'yesno' },
-      { name: 'social_media_1', label: '1 - Informa o nome da plataforma e usuário' },
-      { name: 'social_media_2', label: '2 - Informa o nome da plataforma e usuário' },
+      { name: 'social_media_1', label: '1 - Nome da plataforma e usuário', showIf: { has_social_media: 'sim' } },
+      { name: 'social_media_2', label: '2 - Nome da plataforma e usuário', showIf: { has_social_media: 'sim' } },
       { name: 'passport_number', label: 'Passaporte número e série', hint: 'Exemplo: (AB 123456)', required: true },
       { name: 'passport_issue_place', label: 'País, estado e cidade que emitiu o passaporte' },
       { name: 'passport_issue_date', label: 'Data de emissão', hint: '(DD/MM/AAAA)' },
@@ -58,17 +58,17 @@ const steps = [
       { name: 'travel_companions', label: 'Há outras pessoas viajando com você?', type: 'yesno' },
       { name: 'travel_companions_details', label: 'Nome completo e grau de parentesco/relação (uma pessoa por linha)', type: 'textarea', showIf: { travel_companions: 'sim' } },
       { name: 'been_to_us', label: 'Você já esteve nos EUA?', type: 'yesno' },
-      { name: 'last_us_arrival', label: 'Data de chegada', hint: '(DD/MM/AAAA)' },
-      { name: 'last_us_stay', label: 'Tempo de permanência' },
+      { name: 'last_us_arrival', label: 'Data da última chegada', hint: '(DD/MM/AAAA)', showIf: { been_to_us: 'sim' } },
+      { name: 'last_us_stay', label: 'Tempo de permanência', showIf: { been_to_us: 'sim' } },
       { name: 'us_driver_license', label: 'Você tem ou já teve carteira de motorista americana?', type: 'yesno' },
       { name: 'had_us_visa', label: 'Tem visto emitido para o EUA?', type: 'yesno' },
-      { name: 'previous_visa_issue_date', label: 'Data de emissão do visto', hint: '(DD/MM/AAAA)' },
-      { name: 'previous_visa_number', label: 'Número do visto' },
-      { name: 'same_visa_type', label: 'Você está solicitando o mesmo tipo de visto solicitado anteriormente?', type: 'yesno' },
-      { name: 'same_country_application', label: 'Você está se inscrevendo no mesmo país onde o visto acima foi emitido? E este é o seu país de residência principal?', type: 'yesno' },
+      { name: 'previous_visa_issue_date', label: 'Data de emissão do visto', hint: '(DD/MM/AAAA)', showIf: { had_us_visa: 'sim' } },
+      { name: 'previous_visa_number', label: 'Número do visto', showIf: { had_us_visa: 'sim' } },
+      { name: 'same_visa_type', label: 'Você está solicitando o mesmo tipo de visto solicitado anteriormente?', type: 'yesno', showIf: { had_us_visa: 'sim' } },
+      { name: 'same_country_application', label: 'Você está se inscrevendo no mesmo país onde o visto anterior foi emitido? E este é o seu país de residência principal?', type: 'yesno', showIf: { had_us_visa: 'sim' } },
       { name: 'ten_fingerprints', label: 'Você já tirou impressão digital dos 10 dedos?', type: 'yesno' },
-      { name: 'visa_lost_stolen', label: 'Você já perdeu ou teve seu visto americano roubado?', type: 'yesno' },
-      { name: 'visa_cancelled', label: 'Seu visto americano já foi cancelado ou revogado?', type: 'yesno' },
+      { name: 'visa_lost_stolen', label: 'Você já perdeu ou teve seu visto americano roubado?', type: 'yesno', showIf: { had_us_visa: 'sim' } },
+      { name: 'visa_cancelled', label: 'Seu visto americano já foi cancelado ou revogado?', type: 'yesno', showIf: { had_us_visa: 'sim' } },
       { name: 'visa_refused', label: 'Seu visto americano já foi recusado?', type: 'yesno' },
       { name: 'immigrant_petition', label: 'Alguém entrou com pedido de visto de imigrante em seu nome junto a imigração dos EUA?', type: 'yesno' },
       { name: 'us_contact_name', label: 'Nome da pessoa de contato no EUA' },
@@ -247,7 +247,11 @@ async function uploadDocument(event) {
     return;
   }
   state.data[fieldName] = path;
-  await saveDraft(false);
+  const persisted = await saveDraft(false);
+  if (!persisted) {
+    alert('O arquivo foi enviado, mas não foi possível salvar a referência. Tente novamente antes de sair.');
+    return;
+  }
   setSaveState('saved','Documento anexado');
   renderStep();
   if (previousPath && previousPath !== path) {
