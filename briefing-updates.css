@@ -21,3 +21,8 @@
 .review-item strong{color:#112340;font-size:14px}
 .remember-session{font-size:12px;color:#63738b;display:flex;align-items:center;gap:9px}
 @media(max-width:650px){.review-grid{grid-template-columns:1fr}}
+
+.floating-whatsapp{position:fixed;right:24px;bottom:24px;z-index:450;display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:#25d366;color:white;box-shadow:0 12px 32px rgba(12,65,40,.24);transition:transform .2s,background .2s}
+.floating-whatsapp:hover{background:#1fb85b;transform:translateY(-3px)}
+.floating-whatsapp svg{width:31px;height:31px}
+@media(max-width:640px){.floating-whatsapp{right:16px;bottom:16px;width:52px;height:52px}}
