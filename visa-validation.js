@@ -4,12 +4,12 @@
   const dateFields = new Set([
     'birth_date','father_birth_date','mother_birth_date','passport_issue_date',
     'passport_expiry_date','arrival_date','last_us_arrival','previous_visa_issue_date',
-    'previous_job_start','previous_job_end'
+    'previous_job_start','previous_job_end','spouse_birth_date','employment_start','employment_end','course_start','course_end'
   ]);
-  const birthFields = new Set(['birth_date','father_birth_date','mother_birth_date']);
+  const birthFields = new Set(['birth_date','father_birth_date','mother_birth_date','spouse_birth_date']);
   const pastFields = new Set([
     ...birthFields,'passport_issue_date','last_us_arrival',
-    'previous_visa_issue_date','previous_job_start','previous_job_end'
+    'previous_visa_issue_date','previous_job_start','previous_job_end','employment_start','employment_end','course_start'
   ]);
   const phoneFields = new Set(['primary_phone','secondary_phone','business_phone','payer_phone','employer_phone']);
 
@@ -66,6 +66,10 @@
       if(parsed<today)return 'A chegada prevista não pode estar no passado.';
       if(parsed>max)return 'A chegada prevista está muito distante. Verifique o ano.';
     }
+    if(name==='course_end'){
+      const max=new Date(today.getFullYear()+10,today.getMonth(),today.getDate());
+      if(parsed>max)return 'Verifique o ano previsto para o término do curso.';
+    }
     if(name==='passport_expiry_date'){
       const max=new Date(today.getFullYear()+20,today.getMonth(),today.getDate());
       if(parsed<today)return 'A validade do passaporte está vencida. Confira o documento.';
@@ -78,6 +82,14 @@
     if(name==='passport_issue_date'&&data.passport_expiry_date){
       const expiry=parseDate(data.passport_expiry_date);
       if(expiry && parsed>=expiry)return 'A emissão deve ser anterior à validade do passaporte.';
+    }
+    if(name==='course_end' && data.course_start){
+      const courseStart=parseDate(data.course_start);
+      if(courseStart && parsed<courseStart)return 'O término do curso não pode ser anterior ao início.';
+    }
+    if(name==='employment_end' && data.employment_start){
+      const jobStart=parseDate(data.employment_start);
+      if(jobStart && parsed<jobStart)return 'A saída do emprego não pode ser anterior à admissão.';
     }
     if(name==='previous_job_end' && data.previous_job_start){
       const start=parseDate(data.previous_job_start);
