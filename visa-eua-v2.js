@@ -318,6 +318,82 @@ function renderProgress() {
   });
 }
 
+function validationError(field) {
+  if (!isFieldVisible(field)) return '';
+  const dataField = {...field, required: Boolean(field.required)};
+  return window.VisaValidation.validate(dataField,state.data[field.name],state.data);
+}
+
+function validateStep(index,showErrors = true) {
+  collectVisibleData();
+  const fields = steps[index].fields.filter(isFieldVisible);
+  for (const field of fields) {
+    const message = validationError(field);
+    const element = index === state.currentStep
+      ? [...fieldsRoot.querySelectorAll('input,select,textarea')].find(input => input.name === field.name)
+      : null;
+    if (element && element.type !== 'file') element.setCustomValidity(message);
+    if (message) {
+      if (showErrors && element) {
+        element.focus();
+        element.reportValidity();
+      }
+      return {field:field.name,message};
+    }
+  }
+  return null;
+}
+
+function validateAllSteps() {
+  collectVisibleData();
+  for (let index=0; index<steps.length; index++) {
+    for (const field of steps[index].fields) {
+      const message=validationError(field);
+      if (message) return {index,field:field.name,message,label:field.label};
+    }
+  }
+  return null;
+}
+
+function reportWholeFormError(problem) {
+  state.reviewing=false;
+  state.currentStep=problem.index;
+  progressRoot.hidden=false;
+  renderStep();
+  validateStep(problem.index,true);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function onFieldInput(element) {
+  if (element.type!=='checkbox' && element.tagName==='INPUT' && element.type!=='email') {
+    const formatted=window.VisaValidation.format(element.name,element.value);
+    if(formatted!==element.value)element.value=formatted;
+  }
+  element.setCustomValidity('');
+  scheduleSave();
+}
+
+function onFieldBlur(element) {
+  collectVisibleData();
+  const field=steps[state.currentStep].fields.find(item=>item.name===element.name);
+  if(!field || !isFieldVisible(field))return;
+  const message=validationError(field);
+  element.setCustomValidity(message);
+  element.classList.toggle('field-invalid',Boolean(message));
+  const group=element.closest('.field-group');
+  if(group){
+    let feedback=group.querySelector('.validation-feedback');
+    if(!feedback && message){
+      feedback=document.createElement('small');
+      feedback.className='validation-feedback';
+      feedback.setAttribute('role','alert');
+      group.appendChild(feedback);
+    }
+    if(feedback)feedback.textContent=message;
+    if(feedback)feedback.hidden=!message;
+  }
+}
+
 function renderStep() {
   const step = steps[state.currentStep];
   panelTitle.textContent = step.title;
@@ -326,6 +402,7 @@ function renderStep() {
   fieldsRoot.innerHTML = step.fields.filter(isFieldVisible).map(inputFor).join('');
   prevButton.hidden = state.currentStep === 0;
   nextButton.textContent = state.currentStep === steps.length - 1 ? 'Revisar informações →' : 'Próximo Passo →';
+  nextButton.disabled = state.uploading;
   stepCounter.textContent = `Passo ${state.currentStep + 1} de ${steps.length}`;
   renderProgress();
 
@@ -333,8 +410,13 @@ function renderStep() {
     if (element.type === 'file') {
       element.addEventListener('change', uploadDocument);
     } else {
-      element.addEventListener('input', scheduleSave);
-      element.addEventListener('change', () => { scheduleSave(); refreshConditionalFields(); });
+      element.addEventListener('input', () => onFieldInput(element));
+      element.addEventListener('change', () => {
+        onFieldInput(element);
+        onFieldBlur(element);
+        refreshConditionalFields();
+      });
+      element.addEventListener('blur', () => onFieldBlur(element));
     }
   });
 }
