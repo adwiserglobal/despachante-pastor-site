@@ -331,7 +331,7 @@ async function openVisa(row) {
   try {
     const { row: detail } = await api('get_visa', { id: row.id });
     detailTitle.textContent = detail?.form_data?.full_name || row.applicant_name || 'Solicitação de visto';
-    detailMeta.textContent = `${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
+    detailMeta.textContent = `${detail.form_data?.applicant_relationship || 'Titular'} • ${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
     detailContent.replaceChildren();
 
     const section = document.createElement('section');
@@ -344,7 +344,27 @@ async function openVisa(row) {
       const item = document.createElement('div');
       const text = humanValue(value);
       item.className = `visa-data-item${text.length > 100 ? ' full' : ''}`;
-      item.append(createText('small', fieldLabels[key] || key.replaceAll('_', ' ')), createText('strong', text));
+      item.appendChild(createText('small', fieldLabels[key] || key.replaceAll('_', ' ')));
+      if (['passport_file','previous_visa_file'].includes(key) && value) {
+        const button = document.createElement('button');
+        button.className = 'detail-button';
+        button.type = 'button';
+        button.textContent = 'Abrir anexo ↗';
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try {
+            const {url} = await api('get_visa_document', {id:detail.id,field:key});
+            window.open(url,'_blank','noopener,noreferrer');
+          } catch (error) {
+            window.alert(error?.message || 'Não foi possível abrir este anexo.');
+          } finally {
+            button.disabled = false;
+          }
+        });
+        item.appendChild(button);
+      } else {
+        item.appendChild(createText('strong', text));
+      }
       grid.appendChild(item);
     });
 
