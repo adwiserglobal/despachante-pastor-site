@@ -15,6 +15,7 @@ const steps = [
       { name: 'other_nationality', label: 'Possui outra nacionalidade?', type: 'yesno' },
       { name: 'other_nationality_name', label: 'Qual nacionalidade?', required: true, showIf: { other_nationality: 'sim' } },
       { name: 'other_nationality_passport', label: 'Possui passaporte dessa nacionalidade?', type: 'yesno', showIf: { other_nationality: 'sim' } },
+      { name: 'other_nationality_file', label: 'Foto do passaporte da segunda nacionalidade, se disponível', type: 'file', showIf: { other_nationality: 'sim', other_nationality_passport: 'sim' } },
       { name: 'permanent_resident_elsewhere', label: 'Você é residente permanente de um país ou região diferente do seu país de origem?', type: 'yesno' },
       { name: 'rg', label: 'RG', hint: 'Número com dígito' },
       { name: 'us_ssn', label: 'Número do seguro social EUA' },
@@ -24,7 +25,6 @@ const steps = [
       { name: 'country', label: 'País', autocomplete: 'country-name' },
       { name: 'mailing_same', label: 'Mesmo endereço de correspondência', type: 'yesno', hint: 'Se não for, informe o endereço de correspondência nas observações finais.' },
       { name: 'primary_phone', label: 'Nº telefone principal', type: 'tel', hint: 'Com DDD', autocomplete: 'tel' },
-      { name: 'secondary_phone', label: 'Nº telefone secundário', type: 'tel', hint: 'Com DDD' },
       { name: 'business_phone', label: 'Nº telefone empresa', type: 'tel', hint: 'Com DDD' },
       { name: 'email', label: 'Endereço de E-mail', type: 'email', required: true, autocomplete: 'email' },
       { name: 'additional_email', label: 'Possui outro e-mail?', type: 'yesno' },
@@ -101,6 +101,7 @@ const steps = [
       { name: 'close_relatives_immigration_unknown', label: 'Não sei o status migratório', type: 'checkbox', showIf: { close_relatives_us: 'sim' } },
       { name: 'close_relatives_immigration_status', label: 'Status migratório do parente', required: true, showIf: { close_relatives_us: 'sim', close_relatives_immigration_unknown: false } },
       { name: 'other_relatives_us', label: 'Você tem outro parente nos EUA?', type: 'yesno' },
+      { name: 'other_relatives_details', label: 'Nome completo e grau de parentesco dos demais parentes (uma pessoa por linha)', type: 'textarea', required: true, showIf: { other_relatives_us: 'sim' } },
     ],
   },
   {
@@ -137,7 +138,8 @@ const steps = [
     title: 'Segurança',
     description: '',
     fields: [
-      { name: 'military_service', label: 'Você já serviu o exército?', type: 'textarea', hint: 'Se sim, informe: ramo do serviço, posição, especialidade militar, período.' },
+      { name: 'military_service', label: 'Você já prestou serviço militar?', type: 'yesno' },
+      { name: 'military_service_details', label: 'Informe o ramo, cargo, especialidade e período do serviço militar', type: 'textarea', required: true, showIf: { military_service: 'sim' } },
       { name: 'communicable_disease', label: 'Você tem alguma doença transmissível de importância para a saúde pública?', type: 'yesno' },
       { name: 'mental_physical_threat', label: 'Você tem algum distúrbio mental ou físico que represente ameaça?', type: 'yesno' },
       { name: 'deported', label: 'Você já foi deportado de algum país?', type: 'yesno' },
