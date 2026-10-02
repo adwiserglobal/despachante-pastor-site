@@ -238,7 +238,7 @@ export default async function handler(req, res) {
     if (action === 'get_visa_document') {
       const id = String(body.id || '');
       const field = String(body.field || '');
-      if (!/^[0-9a-f-]{36}$/i.test(id) || !['passport_file','previous_visa_file'].includes(field)) {
+      if (!/^[0-9a-f-]{36}$/i.test(id) || !['passport_file','previous_visa_file','other_nationality_file'].includes(field)) {
         return json(res, 400, { error: 'Documento inválido.' });
       }
       const {data:application,error:applicationError} = await sb.from('visa_applications')
