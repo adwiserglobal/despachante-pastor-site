@@ -1,46 +1,160 @@
 const portalSb = window.despachanteSupabase;
-
 const loading = document.querySelector('#portal-loading');
 const content = document.querySelector('#portal-content');
 const userEmail = document.querySelector('#portal-user-email');
-const statusEl = document.querySelector('#us-visa-status');
-const descriptionEl = document.querySelector('#us-visa-description');
-const stepLabelEl = document.querySelector('#us-visa-step-label');
-const percentEl = document.querySelector('#us-visa-percent');
-const progressFillEl = document.querySelector('#us-visa-progress-fill');
+const applicationList = document.querySelector('#portal-applications');
+const documentsList = document.querySelector('#portal-document-list');
+const familyDialog = document.querySelector('#family-application-dialog');
+const familyForm = document.querySelector('#family-application-form');
 const logoutButton = document.querySelector('#portal-logout');
-const continueApplicationLink = document.querySelector('.request-continue');
 
 window.PastorLoader?.show();
 
-function showApplicationState(application) {
-  const totalSteps = 5;
-  const currentStep = Math.max(0, Math.min(Number(application?.current_step || 0), totalSteps - 1));
-  const displayStep = currentStep + 1;
-  const percent = Math.round((displayStep / totalSteps) * 100);
-
-  stepLabelEl.textContent = `Etapa ${displayStep} de ${totalSteps}`;
-  percentEl.textContent = `${percent}%`;
-  progressFillEl.style.width = `${percent}%`;
-
-  if (!application) {
-    statusEl.textContent = 'Pronto para continuar';
-    descriptionEl.textContent = 'Continue sua aplicação de visto americano. Seu progresso será salvo automaticamente.';
-    return;
-  }
-
-  statusEl.textContent = 'Em andamento';
-  descriptionEl.textContent = 'Sua aplicação está salva e pode ser retomada exatamente de onde você parou.';
+function applicationLink(id) {
+  return '/vistos/estados-unidos?application=' + encodeURIComponent(id);
 }
 
-continueApplicationLink?.addEventListener('click', async (event) => {
-  event.preventDefault();
-  const href = continueApplicationLink.getAttribute('href');
-  window.PastorLoader?.show();
-  await new Promise((resolve) => setTimeout(resolve, 520));
-  window.location.href = href || '/vistos/estados-unidos';
-});
+function createApplicationCard(application) {
+  const data = application.form_data || {};
+  const relationship = data.applicant_relationship || 'Titular';
+  const applicant = data.full_name || data.applicant_name || (relationship === 'Titular' ? 'Minha aplicação' : 'Familiar');
+  const draft = application.status === 'draft';
+  const step = Math.max(0, Math.min(Number(application.current_step || 0), 4));
+  const percent = draft ? Math.round((step + 1) / 5 * 100) : 100;
+  const card = document.createElement('article');
+  card.className = 'request-card';
 
+  const flag = document.createElement('div');
+  flag.className = 'request-country';
+  flag.setAttribute('role', 'img');
+  flag.setAttribute('aria-label', 'Bandeira dos Estados Unidos');
+  flag.textContent = '🇺🇸';
+
+  const details = document.createElement('div');
+  details.className = 'request-copy';
+  const top = document.createElement('div');
+  top.className = 'request-meta';
+  const title = document.createElement('h2');
+  title.textContent = 'Visto Americano';
+  const status = document.createElement('span');
+  status.className = 'request-status';
+  const statusNames = {draft:'Em andamento',submitted:'Enviado',in_review:'Em análise',needs_information:'Informações solicitadas',completed:'Concluído',archived:'Arquivado'};
+  status.textContent = statusNames[application.status] || 'Em acompanhamento';
+  top.append(title,status);
+  const person = document.createElement('p');
+  person.className = 'applicant-label';
+  person.textContent = applicant + ' · ' + relationship;
+  const description = document.createElement('p');
+  description.textContent = draft
+    ? 'Aplicação salva. Continue exatamente do ponto em que parou.'
+    : 'Aplicação enviada. O acompanhamento será realizado pelo WhatsApp.';
+  details.append(top,person,description);
+
+  if (draft) {
+    const progress = document.createElement('div');
+    progress.className = 'request-progress';
+    const label = document.createElement('div');
+    label.className = 'request-progress-label';
+    const stage = document.createElement('span');
+    stage.textContent = 'Etapa ' + (step + 1) + ' de 5';
+    const value = document.createElement('span');
+    value.textContent = percent + '%';
+    label.append(stage,value);
+    const track = document.createElement('div');
+    track.className = 'request-progress-track';
+    const fill = document.createElement('div');
+    fill.className = 'request-progress-fill';
+    fill.style.width = percent + '%';
+    track.appendChild(fill);
+    progress.append(label,track);
+    details.appendChild(progress);
+  }
+
+  card.append(flag,details);
+  if (draft) {
+    const action = document.createElement('a');
+    action.className = 'request-continue';
+    action.href = applicationLink(application.id);
+    action.textContent = 'Continuar aplicação →';
+    action.addEventListener('click', async (event) => {
+      event.preventDefault();
+      window.PastorLoader?.show();
+      await new Promise(resolve => setTimeout(resolve, 400));
+      window.location.assign(action.href);
+    });
+    card.appendChild(action);
+  }
+  return card;
+}
+
+function renderApplications(applications) {
+  applicationList.replaceChildren();
+  if (!applications.length) {
+    const empty = document.createElement('div');
+    empty.className = 'portal-empty';
+    empty.textContent = 'Você ainda não iniciou uma aplicação. Escolha “Nova aplicação” ou “Adicionar familiar” para começar.';
+    applicationList.appendChild(empty);
+    return;
+  }
+  const drafts = applications.filter(a => a.status === 'draft');
+  const previous = applications.filter(a => a.status !== 'draft');
+  drafts.forEach(a => applicationList.appendChild(createApplicationCard(a)));
+  if (previous.length) {
+    const heading = document.createElement('h2');
+    heading.className = 'portal-section-title';
+    heading.textContent = 'Solicitações anteriores';
+    applicationList.appendChild(heading);
+    previous.forEach(a => applicationList.appendChild(createApplicationCard(a)));
+  }
+}
+
+function renderDocuments(applications) {
+  documentsList.replaceChildren();
+  const documents = applications.flatMap(application =>
+    ['passport_file','previous_visa_file'].map(field => ({application,field,path:application.form_data?.[field]}))
+  ).filter(document => document.path);
+  if (!documents.length) {
+    documentsList.textContent = 'Nenhum documento anexado ainda.';
+    return;
+  }
+  documents.forEach(({application,field,path}) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'portal-document-button';
+    const label = field === 'passport_file' ? 'Passaporte' : 'Visto anterior';
+    const applicant = application.form_data?.full_name || application.form_data?.applicant_name || 'Titular';
+    button.textContent = label + ' · ' + applicant + ' ↗';
+    button.addEventListener('click', async () => {
+      const {data,error} = await portalSb.storage.from('visa-documents').createSignedUrl(path,60);
+      if (error || !data?.signedUrl) {
+        alert('Não foi possível abrir este documento.');
+        return;
+      }
+      window.open(data.signedUrl,'_blank','noopener,noreferrer');
+    });
+    documentsList.appendChild(button);
+  });
+}
+
+document.querySelector('#new-self-application').addEventListener('click', () => {
+  window.PastorLoader?.show();
+  window.location.assign('/vistos/estados-unidos?new=1&relationship=Titular');
+});
+document.querySelector('#new-family-application').addEventListener('click', () => familyDialog.showModal());
+document.querySelector('#family-modal-close').addEventListener('click', () => familyDialog.close());
+familyDialog.addEventListener('click',event => {if(event.target===familyDialog)familyDialog.close();});
+familyForm.addEventListener('submit',event => {
+  event.preventDefault();
+  if (!familyForm.reportValidity())return;
+  const params = new URLSearchParams({
+    new:'1',
+    relationship:familyForm.elements.relationship.value,
+    applicant_name:familyForm.elements.applicant_name.value.trim()
+  });
+  familyDialog.close();
+  window.PastorLoader?.show();
+  window.location.assign('/vistos/estados-unidos?' + params.toString());
+});
 logoutButton.addEventListener('click', async () => {
   window.PastorLoader?.show();
   await portalSb.auth.signOut();
@@ -49,70 +163,29 @@ logoutButton.addEventListener('click', async () => {
 
 (async function initPortal() {
   try {
-    const { data: { session } } = await portalSb.auth.getSession();
+    const {data:{session}} = await portalSb.auth.getSession();
     if (!session) {
       window.location.replace('./login.html');
       return;
     }
-
     userEmail.textContent = session.user.email || '';
-
-    const { data: application, error } = await portalSb
-      .from('visa_applications')
-      .select('id,status,current_step')
-      .eq('user_id', session.user.id)
-      .eq('country', 'US')
-      .eq('status', 'draft')
-      .maybeSingle();
-
-    if (error) throw error;
-
-    showApplicationState(application || null);
-    const {data: history, error: historyError} = await portalSb.from('visa_applications')
-      .select('id,country,status,current_step,form_data,created_at')
-      .eq('user_id', session.user.id).order('created_at',{ascending:false}).limit(50);
-    if(historyError) throw historyError;
-    const records=history||[];
-    const historical=document.querySelector('#other-requests');
-    const documents=document.querySelector('#portal-document-list');
-    historical.replaceChildren();
-    const completed=records.filter(item=>item.status!=='draft');
-    if(completed.length){
-      const title=document.createElement('h2');title.textContent='Solicitações anteriores';historical.appendChild(title);
-      completed.forEach(item=>{
-        const el=document.createElement('article');el.className='previous-request-card';
-        const name=document.createElement('strong');name.textContent=item.country==='US'?'Visto Americano':item.country;
-        const status=document.createElement('span');status.textContent=item.status==='submitted'?'Enviado':item.status;
-        el.append(name,status);historical.appendChild(el);
-      });
-    }
-    documents.replaceChildren();
-    const docs=records.flatMap(item=>['passport_file','previous_visa_file']
-      .map(key=>({key,path:item.form_data?.[key]}))).filter(item=>item.path);
-    if(!docs.length)documents.textContent='Nenhum documento anexado ainda.';
-    docs.forEach(doc=>{
-      const button=document.createElement('button');
-      button.className='portal-document-button';
-      button.textContent=doc.key==='passport_file'?'Passaporte ↗':'Visto anterior ↗';
-      button.addEventListener('click',async()=>{
-        const {data,error}=await portalSb.storage.from('visa-documents').createSignedUrl(doc.path,60);
-        if(error){alert('Não foi possível abrir este anexo.');return;}
-        window.open(data.signedUrl,'_blank','noopener,noreferrer');
-      });
-      documents.appendChild(button);
-    });
-    if(!application&&completed.length){
-      statusEl.textContent='Enviado';
-      descriptionEl.textContent='Seu questionário foi enviado. O acompanhamento será realizado pelo WhatsApp.';
-      continueApplicationLink.innerHTML='Iniciar nova aplicação <span aria-hidden="true">→</span>';
-    }
-    loading.hidden = true;
-    content.hidden = false;
+    const {data, error} = await portalSb.from('visa_applications')
+      .select('id,country,status,current_step,form_data,created_at,updated_at')
+      .eq('user_id',session.user.id)
+      .eq('country','US')
+      .order('updated_at',{ascending:false})
+      .limit(100);
+    if(error)throw error;
+    const applications=data||[];
+    renderApplications(applications);
+    renderDocuments(applications);
+    loading.hidden=true;
+    content.hidden=false;
     await window.PastorLoader?.hide?.(550);
-  } catch (error) {
+  } catch(error) {
     console.error(error);
     await window.PastorLoader?.hide?.(350);
-    loading.className = 'portal-error';
-    loading.textContent = 'Não foi possível carregar suas solicitações agora. Atualize a página e tente novamente.';
+    loading.className='portal-error';
+    loading.textContent='Não foi possível carregar suas solicitações agora. Atualize a página e tente novamente.';
   }
 })();
