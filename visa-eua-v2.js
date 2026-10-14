@@ -150,8 +150,8 @@ const steps = [
       { name: 'deported', label: 'Você já foi deportado de algum país?', type: 'yesno' },
       { name: 'firearms_training', label: 'Possui habilidade ou treinamento com arma de fogo?', type: 'yesno' },
       { name: 'additional_notes', label: 'Observações adicionais', type: 'textarea' },
-      { name: 'passport_file', label: 'Foto ou cópia do passaporte', type: 'file', required: true },
-      { name: 'previous_visa_file', label: 'Foto ou cópia do visto anterior', type: 'file', required: true, showIf: { had_us_visa: 'sim' } },
+      { name: 'passport_file', label: 'Foto do passaporte', type: 'file', required: true },
+      { name: 'previous_visa_file', label: 'Foto do visto anterior', type: 'file', required: true, showIf: { had_us_visa: 'sim' } },
       { name: 'declaration', label: 'Declaro que as informações declaradas acima são verdadeiras e que estou ciente que a omissão de informações ou a apresentação de dados ou documentos falsos e/ou divergentes podem comprometer o processo de visto.', type: 'checkbox', required: true },
     ],
   },
@@ -199,12 +199,11 @@ function inputFor(field) {
 
   if (field.type === 'file') {
     const path = state.data[field.name];
-    const fileName = path ? String(path).split('/').pop().replace(/^\\d+_/, '') : '';
     return `<div class="field-group"><label for="${field.name}">${escapeHtml(field.label)}${mark}</label>
       <input id="${field.name}" type="file" name="${field.name}" accept="image/jpeg,image/png,image/webp,application/pdf"
       ${!path && field.required ? 'required' : ''} aria-describedby="${field.name}-hint">
       <small id="${field.name}-hint" class="field-hint">${path
-        ? 'Anexado: ' + escapeHtml(fileName) + '. Selecione outro arquivo para substituir.'
+        ? 'Documento anexado com segurança. Selecione outro arquivo para substituir.'
         : 'JPG, PNG, WebP ou PDF, até 10 MB.'}</small></div>`;
   }
   if (field.type === 'checkbox') {
@@ -267,8 +266,22 @@ async function uploadDocument(event) {
   if(state.uploading)return;
   const fieldName=element.name;
   const previousPath=state.data[fieldName];
-  const safeName=file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]/g,'_').slice(-85);
-  const path=`${state.user.id}/${state.application.id}/${fieldName}/${Date.now()}_${safeName}`;
+  // Confere a assinatura real do arquivo (não confia só na extensão/tipo informado pelo navegador)
+  const head=new Uint8Array(await file.slice(0,12).arrayBuffer());
+  const ascii=String.fromCharCode(...head);
+  const signatureOk=
+    (file.type==='application/pdf' && ascii.startsWith('%PDF')) ||
+    (file.type==='image/png' && head[0]===0x89 && ascii.slice(1,4)==='PNG') ||
+    (file.type==='image/jpeg' && head[0]===0xFF && head[1]===0xD8) ||
+    (file.type==='image/webp' && ascii.startsWith('RIFF') && ascii.slice(8,12)==='WEBP');
+  if(!signatureOk) {
+    element.value='';
+    alert('O arquivo não parece ser uma imagem ou PDF válido. Selecione outro arquivo.');
+    return;
+  }
+  // Nome aleatório: o nome original do arquivo pode conter dados pessoais
+  const extension={'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type];
+  const path=`${state.user.id}/${state.application.id}/${fieldName}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
   state.uploading=true;
   element.disabled=true;
   nextButton.disabled=true;
@@ -535,7 +548,7 @@ async function submitApplication() {
 
   if (!state.data.passport_file || (state.data.had_us_visa === 'sim' && !state.data.previous_visa_file)) {
     await window.PastorLoader?.hide?.(0);
-    alert('Anexe a cópia do passaporte e, se tiver visto anterior, a cópia dele.');
+    alert('Anexe a foto do passaporte e, se tiver visto anterior, a foto dele.');
     nextButton.disabled = false;
     return;
   }
