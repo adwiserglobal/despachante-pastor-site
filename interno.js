@@ -239,6 +239,25 @@ function buildStatusSelect(value, options, onChange) {
   return select;
 }
 
+function buildDeleteButton(what, onConfirm) {
+  const button = document.createElement('button');
+  button.className = 'detail-button danger-button';
+  button.type = 'button';
+  button.textContent = 'Excluir';
+  button.addEventListener('click', async () => {
+    if (!window.confirm(`Excluir ${what}?\n\nEsta ação é permanente e não pode ser desfeita.`)) return;
+    button.disabled = true;
+    try {
+      await onConfirm();
+    } catch (error) {
+      console.error(error);
+      window.alert(error?.message || 'Não foi possível excluir.');
+      button.disabled = false;
+    }
+  });
+  return button;
+}
+
 function renderContacts() {
   contactsBody.replaceChildren();
   contactsEmpty.hidden = contactRows.length > 0;
@@ -271,6 +290,13 @@ function renderContacts() {
       renderContacts();
     }));
     tr.appendChild(statusCell);
+    const contactAction = document.createElement('td');
+    contactAction.appendChild(buildDeleteButton(`o contato de ${row.name || 'este cliente'}`, async () => {
+      await api('delete_quote', { id: row.id });
+      contactRows = contactRows.filter((item) => item.id !== row.id);
+      renderContacts();
+    }));
+    tr.appendChild(contactAction);
     contactsBody.appendChild(tr);
   });
 }
@@ -310,6 +336,11 @@ function renderVisas() {
     button.textContent = 'Abrir formulário';
     button.addEventListener('click', () => openVisa(row));
     action.appendChild(button);
+    action.appendChild(buildDeleteButton(`o formulário de ${row.applicant_name || 'este solicitante'} e todos os anexos`, async () => {
+      await api('delete_visa', { id: row.id });
+      visaRows = visaRows.filter((item) => item.id !== row.id);
+      renderVisas();
+    }));
     tr.appendChild(action);
     visasBody.appendChild(tr);
   });
@@ -353,10 +384,12 @@ async function openVisa(row) {
         button.textContent = 'Abrir anexo ↗';
         button.addEventListener('click', async () => {
           button.disabled = true;
+          const popup = window.open('', '_blank');
           try {
             const {url} = await api('get_visa_document', {id:detail.id,field:key});
-            window.open(url,'_blank','noopener,noreferrer');
+            if (popup) { popup.opener = null; popup.location.href = url; } else { window.location.assign(url); }
           } catch (error) {
+            if (popup) popup.close();
             window.alert(error?.message || 'Não foi possível abrir este anexo.');
           } finally {
             button.disabled = false;

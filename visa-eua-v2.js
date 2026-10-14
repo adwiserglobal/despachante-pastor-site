@@ -253,34 +253,56 @@ function refreshConditionalFields() {
   }
 }
 
+// Identifica o tipo real do arquivo pela assinatura (não confia na extensão nem no tipo informado)
+async function detectFileKind(file) {
+  const head=new Uint8Array(await file.slice(0,1024).arrayBuffer());
+  const ascii=String.fromCharCode(...head);
+  if(ascii.slice(0,1024).includes('%PDF'))return 'application/pdf';
+  if(head[0]===0x89 && ascii.slice(1,4)==='PNG')return 'image/png';
+  if(head[0]===0xFF && head[1]===0xD8)return 'image/jpeg';
+  if(ascii.startsWith('RIFF') && ascii.slice(8,12)==='WEBP')return 'image/webp';
+  if(ascii.slice(4,8)==='ftyp' && /heic|heix|hevc|mif1|heif/.test(ascii.slice(8,16)))return 'heic';
+  return null;
+}
+
+// Reduz fotos grandes (comuns em celulares) para caber no limite sem perder legibilidade
+async function shrinkImage(file) {
+  const bitmap=await createImageBitmap(file);
+  const scale=Math.min(1,2600/Math.max(bitmap.width,bitmap.height));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.round(bitmap.width*scale);
+  canvas.height=Math.round(bitmap.height*scale);
+  canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);
+  bitmap.close?.();
+  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('compress')),'image/jpeg',0.85));
+}
+
 async function uploadDocument(event) {
   const element=event.currentTarget;
-  const file=element.files?.[0];
+  let file=element.files?.[0];
   if(!file)return;
-  if(!['image/jpeg','image/png','image/webp','application/pdf'].includes(file.type)
-     || file.size===0 || file.size>10485760) {
-    element.value='';
-    alert('Selecione uma imagem JPG, PNG, WebP ou PDF de até 10 MB.');
-    return;
-  }
   if(state.uploading)return;
+  const fail=(message)=>{element.value='';setSaveState('','Não foi possível concluir o anexo');alert(message);};
+  if(file.size===0)return fail('O arquivo está vazio. Selecione outro arquivo.');
+  let kind;
+  try { kind=await detectFileKind(file); } catch { kind=null; }
+  if(kind==='heic')return fail('Fotos em formato HEIC (iPhone) não são aceitas. Envie em JPG, PNG ou PDF. No iPhone: Ajustes > Câmera > Formatos > "Mais Compatível".');
+  if(!kind)return fail('O arquivo não parece ser uma imagem (JPG, PNG, WebP) ou PDF válido. Selecione outro arquivo.');
+  let uploadType=kind;
+  if(kind!=='application/pdf' && file.size>2*1024*1024) {
+    try {
+      setSaveState('saving','Otimizando imagem...');
+      file=await shrinkImage(file);
+      uploadType='image/jpeg';
+    } catch(error) {
+      console.error('Não foi possível otimizar a imagem:',error);
+    }
+  }
+  if(file.size>10485760)return fail('O arquivo é maior que 10 MB. Envie uma foto menor ou um PDF mais leve.');
   const fieldName=element.name;
   const previousPath=state.data[fieldName];
-  // Confere a assinatura real do arquivo (não confia só na extensão/tipo informado pelo navegador)
-  const head=new Uint8Array(await file.slice(0,12).arrayBuffer());
-  const ascii=String.fromCharCode(...head);
-  const signatureOk=
-    (file.type==='application/pdf' && ascii.startsWith('%PDF')) ||
-    (file.type==='image/png' && head[0]===0x89 && ascii.slice(1,4)==='PNG') ||
-    (file.type==='image/jpeg' && head[0]===0xFF && head[1]===0xD8) ||
-    (file.type==='image/webp' && ascii.startsWith('RIFF') && ascii.slice(8,12)==='WEBP');
-  if(!signatureOk) {
-    element.value='';
-    alert('O arquivo não parece ser uma imagem ou PDF válido. Selecione outro arquivo.');
-    return;
-  }
   // Nome aleatório: o nome original do arquivo pode conter dados pessoais
-  const extension={'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[file.type];
+  const extension={'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/webp':'webp'}[uploadType];
   const path=`${state.user.id}/${state.application.id}/${fieldName}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
   state.uploading=true;
   element.disabled=true;
@@ -288,7 +310,7 @@ async function uploadDocument(event) {
   setSaveState('saving','Enviando documento...');
   try {
     const {error}=await sb.storage.from('visa-documents').upload(path,file,{
-      contentType:file.type,upsert:false
+      contentType:uploadType,upsert:false
     });
     if(error)throw error;
     state.data[fieldName]=path;
@@ -495,6 +517,13 @@ async function saveDraft(showState = true) {
   return true;
 }
 
+const SHARED_FAMILY_FIELDS = [
+  'nationality','address','city','state','country','mailing_same',
+  'travel_purpose','travel_purpose_other','specific_travel_plans','arrival_date','stay_duration',
+  'us_stay_address','us_stay_location','trip_payer','payer_phone','payer_email','payer_relation','payer_same_address',
+  'us_contact_name','us_contact_org','us_contact_relation','us_contact_address','us_contact_details',
+];
+
 async function ensureApplication() {
   const params = new URLSearchParams(window.location.search);
   const requestedId = params.get('application');
@@ -523,6 +552,15 @@ async function ensureApplication() {
   const name=(params.get('applicant_name') || '').trim().slice(0,160);
   if(relationship!=='Titular' && !name)throw new Error('Informe o nome completo do familiar.');
   const formData = {applicant_relationship:relationship};
+  if(createNew) {
+    // Reaproveita dados comuns da família (endereço, viagem, pagador, contato nos EUA) para não recomeçar do zero
+    const {data:previous} = await sb.from('visa_applications').select('form_data')
+      .eq('user_id',state.user.id).eq('country','US').order('updated_at',{ascending:false}).limit(1);
+    const source = previous?.[0]?.form_data || {};
+    SHARED_FAMILY_FIELDS.forEach((field) => {
+      if(source[field] !== undefined && source[field] !== '') formData[field] = source[field];
+    });
+  }
   if(name) {
     formData.applicant_name=name;
     formData.full_name=name;
@@ -530,7 +568,10 @@ async function ensureApplication() {
   const {data:created,error} = await sb.from('visa_applications').insert({
     user_id:state.user.id,country:'US',status:'draft',form_data:formData,current_step:0
   }).select('*').single();
-  if(error)throw error;
+  if(error) {
+    if(error.code==='23505')throw new Error('Você já tem um questionário em andamento. Envie-o primeiro para adicionar outro solicitante.');
+    throw error;
+  }
   window.history.replaceState(null,'','/vistos/estados-unidos?application='+encodeURIComponent(created.id));
   return created;
 }
@@ -565,7 +606,7 @@ async function submitApplication() {
   if (error) {
     console.error(error);
     await window.PastorLoader?.hide?.(550);
-    alert('Não foi possível enviar agora. Seu progresso continua salvo. Tente novamente.');
+    alert((error.message ? error.message + '\n\n' : '') + 'Seu progresso continua salvo. Corrija o ponto indicado e tente novamente.');
     nextButton.disabled = false;
     nextButton.textContent = 'Confirmar e enviar';
     return;

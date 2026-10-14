@@ -270,6 +270,42 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true });
     }
 
+    if (action === 'delete_quote') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
+      await audit(sb, user, 'delete', 'quote_requests', id);
+      const { error } = await sb.from('quote_requests').delete().eq('id', id);
+      if (error) throw error;
+      return json(res, 200, { ok: true });
+    }
+
+    if (action === 'delete_visa') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
+      const { data: application, error: findError } = await sb.from('visa_applications')
+        .select('id,user_id,form_data').eq('id', id).single();
+      if (findError || !application) return json(res, 404, { error: 'Aplicação não encontrada.' });
+
+      // Remove os anexos do Storage (campos registrados + qualquer arquivo na pasta da aplicação)
+      const fields = ['passport_file', 'previous_visa_file', 'other_nationality_file'];
+      const paths = new Set();
+      for (const field of fields) {
+        const path = application.form_data?.[field];
+        const prefix = application.user_id + '/' + application.id + '/' + field + '/';
+        if (typeof path === 'string' && path.startsWith(prefix)) paths.add(path);
+        const { data: files } = await sb.storage.from('visa-documents').list(prefix.slice(0, -1), { limit: 100 });
+        (files || []).forEach((file) => paths.add(prefix + file.name));
+      }
+      if (paths.size) {
+        const { error: removeError } = await sb.storage.from('visa-documents').remove([...paths]);
+        if (removeError) throw removeError;
+      }
+      await audit(sb, user, 'delete', 'visa_applications', id);
+      const { error } = await sb.from('visa_applications').delete().eq('id', id);
+      if (error) throw error;
+      return json(res, 200, { ok: true, removed_files: paths.size });
+    }
+
     return json(res, 400, { error: 'Ação inválida.' });
   } catch (error) {
     console.error('Erro na API interna:', error?.message || error);
