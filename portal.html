@@ -12,21 +12,47 @@
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./briefing-updates.css" />
     <link rel="stylesheet" href="./client-portal.css" />
+    <link rel="stylesheet" href="./portal-shell.css" />
   </head>
-  <body class="client-portal-page">
-    <header class="client-portal-header">
-      <div class="container">
-        <a class="brand" href="./index.html" aria-label="Despachante Pastor - início">
-          <span class="brand-mark"><img src="./assets/logo.png" alt="Logo Despachante Pastor" /></span>
-          <span class="brand-copy"><strong>Despachante Pastor</strong><small>Área do cliente</small></span>
+  <body class="client-portal-page portal-with-sidebar">
+    <div class="portal-shell">
+      <aside class="portal-sidebar" id="portal-sidebar" aria-label="Menu da área do cliente">
+        <a class="portal-sidebar-brand" href="./index.html" aria-label="Despachante Pastor - início">
+          <img src="./assets/logo-white.png" alt="Logo Despachante Pastor" />
+          <small>Área do cliente</small>
         </a>
-
-        <div class="client-portal-actions">
-          <a class="social-instagram portal-instagram" href="https://www.instagram.com/desp.pastor/" target="_blank" rel="noopener noreferrer" aria-label="Instagram do Despachante Pastor">@desp.pastor ↗</a><span class="client-portal-email" id="portal-user-email"></span>
+        <nav class="portal-sidebar-nav">
+          <a class="is-active" href="./portal.html"><span aria-hidden="true">▤</span> Minhas solicitações</a>
+          <button type="button" data-proxy="#new-self-application"><span aria-hidden="true">＋</span> Nova aplicação</button>
+          <button type="button" data-proxy="#new-family-application"><span aria-hidden="true">⚇</span> Adicionar familiar</button>
+          <a href="./vistos.html"><span aria-hidden="true">✈</span> Vistos</a>
+          <a href="./index.html"><span aria-hidden="true">⌂</span> Voltar ao site</a>
+        </nav>
+        <div class="portal-sidebar-foot">
+          <a href="https://wa.me/551144382633?text=Ol%C3%A1%21%20Preciso%20de%20ajuda%20na%20%C3%A1rea%20do%20cliente." target="_blank" rel="noopener noreferrer"><span aria-hidden="true">✆</span> Falar no WhatsApp</a>
+          <a href="https://www.instagram.com/desp.pastor/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">◎</span> @desp.pastor</a>
           <button class="logout-button" id="portal-logout" type="button">Sair</button>
         </div>
-      </div>
-    </header>
+      </aside>
+      <div class="portal-sidebar-backdrop" id="portal-sidebar-backdrop"></div>
+
+      <div class="portal-body">
+        <header class="portal-topbar">
+          <button class="portal-menu-toggle" id="portal-menu-toggle" type="button" aria-label="Abrir menu" aria-controls="portal-sidebar"><span></span><span></span><span></span></button>
+          <div class="portal-topbar-right">
+            <span class="client-portal-email" id="portal-user-email"></span>
+            <div class="portal-bell-wrap">
+              <button class="portal-bell" id="portal-bell" type="button" aria-label="Notificações" aria-expanded="false">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg>
+                <span class="portal-bell-badge" id="portal-bell-badge" hidden>0</span>
+              </button>
+              <div class="portal-bell-panel" id="portal-bell-panel" hidden>
+                <div class="portal-bell-title">Notificações</div>
+                <div id="portal-bell-list"><p class="portal-bell-empty">Nenhuma notificação por enquanto.</p></div>
+              </div>
+            </div>
+          </div>
+        </header>
 
     <main class="client-portal-main">
       <div class="client-portal-heading">
@@ -72,11 +98,14 @@
         </form>
       </dialog>
     </main>
+      </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-client.js"></script>
     <script src="./loading-screen.js"></script>
     <script src="./portal.js"></script>
+    <script src="./portal-shell.js"></script>
     <a class="floating-whatsapp" href="https://wa.me/551144382633?text=Ol%C3%A1%21%20Vim%20pelo%20site%20e%20gostaria%20de%20atendimento." target="_blank" rel="noopener noreferrer" aria-label="Conversar no WhatsApp" title="Conversar no WhatsApp">
     <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16 3.1A12.8 12.8 0 0 0 5.02 22.38l-1.7 6.4 6.53-1.72A12.8 12.8 0 1 0 16 3.1Zm0 23.2a10.35 10.35 0 0 1-5.3-1.44l-.38-.22-3.9 1.02 1.04-3.8-.24-.38A10.4 10.4 0 1 1 16 26.3Zm5.77-7.87c-.31-.16-1.85-.91-2.14-1.02-.29-.1-.49-.15-.7.16-.2.31-.8 1.02-.98 1.23-.18.2-.36.23-.68.07-.31-.16-1.32-.48-2.52-1.56-.93-.83-1.55-1.85-1.73-2.17-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.55.16-.18.21-.31.31-.52.11-.21.06-.39-.02-.55-.08-.16-.7-1.69-.97-2.3-.25-.62-.51-.53-.7-.54h-.6c-.21 0-.55.08-.84.39-.28.31-1.1 1.08-1.1 2.62s1.13 3.03 1.28 3.24c.16.2 2.22 3.37 5.36 4.74.75.32 1.33.51 1.79.66.75.24 1.43.2 1.97.12.6-.09 1.85-.76 2.11-1.49.26-.73.26-1.36.18-1.49-.08-.13-.29-.21-.6-.36Z"/></svg>
   </a>

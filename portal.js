@@ -173,6 +173,8 @@ logoutButton.addEventListener('click', async () => {
     if(error)throw error;
     const applications=data||[];
     renderApplications(applications);
+    window.__portalApplications=applications;
+    document.dispatchEvent(new CustomEvent('portal:applications',{detail:applications}));
     if (new URLSearchParams(location.search).get('add_family') === '1') {
       familyDialog.showModal();
       history.replaceState(null,'','/portal.html');
