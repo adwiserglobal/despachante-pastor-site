@@ -101,3 +101,14 @@
   .portal-topbar { padding: 0 16px; }
   .portal-topbar .client-portal-email { display: none; }
 }
+
+/* Botão voltar do formulário */
+.form-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-bottom: 18px; padding: 9px 16px;
+  border: 1px solid #dfe5ec; border-radius: 999px;
+  color: #0b1d38; background: #fff;
+  font-size: 13px; font-weight: 700; text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.form-back:hover { transform: translateX(-3px); border-color: #d3ad5b; box-shadow: 0 8px 20px rgba(11,29,56,.08); }
