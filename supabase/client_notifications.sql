@@ -1,0 +1,7 @@
+-- Já aplicado no projeto Supabase (registro para referência).
+-- Tabela de avisos ao cliente + gatilho que cria um aviso quando a equipe muda o status da aplicação.
+-- create table public.client_notifications (id uuid pk, user_id uuid, application_id uuid -> visa_applications, status text, title text, body text, created_at timestamptz, read_at timestamptz);
+-- RLS: cliente só lê e marca como lida (update) as próprias notificações; sem insert/delete (só o gatilho).
+-- Policy extra em visa_applications: o cliente lê o status das próprias aplicações em qualquer status (Storage continua restrito a rascunhos).
+-- Gatilho notify_client_on_status_change (SECURITY DEFINER, execução revogada para anon/authenticated):
+--   in_review -> "Sua solicitação está em análise"; needs_information -> "Precisamos de mais informações"; completed -> "Solicitação concluída".

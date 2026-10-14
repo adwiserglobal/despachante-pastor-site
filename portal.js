@@ -87,19 +87,85 @@ function createApplicationCard(application) {
   return card;
 }
 
+const TRACK_STEPS = ['Enviado', 'Em análise', 'Concluído'];
+
+function trackIndex(status) {
+  return ({submitted:0,in_review:1,needs_information:1,completed:2})[status] ?? 0;
+}
+
+function createTrackingCard(application) {
+  const data = application.form_data || {};
+  const applicant = data.full_name || data.applicant_name || 'Minha aplicação';
+  const relationship = data.applicant_relationship || 'Titular';
+  const index = trackIndex(application.status);
+  const needsInfo = application.status === 'needs_information';
+  const completed = application.status === 'completed';
+  const card = document.createElement('article');
+  card.className = 'track-card' + (needsInfo ? ' needs-info' : '') + (completed ? ' is-complete' : '');
+
+  const head = document.createElement('div');
+  head.className = 'track-head';
+  const title = document.createElement('h2');
+  title.textContent = 'Visto Americano';
+  const badge = document.createElement('span');
+  badge.className = 'request-status';
+  const names = {submitted:'Enviado',in_review:'Em análise',needs_information:'Informações solicitadas',completed:'Concluído'};
+  badge.textContent = names[application.status] || 'Em acompanhamento';
+  head.append(title, badge);
+
+  const person = document.createElement('p');
+  person.className = 'applicant-label';
+  person.textContent = applicant + ' · ' + relationship;
+
+  const steps = document.createElement('ol');
+  steps.className = 'track-steps';
+  TRACK_STEPS.forEach((label, i) => {
+    const li = document.createElement('li');
+    const state = i < index || (completed && i === index) ? 'done' : i === index ? 'current' : 'next';
+    li.className = 'track-step is-' + state + (state === 'current' && needsInfo ? ' is-alert' : '');
+    const dot = document.createElement('span');
+    dot.className = 'track-dot';
+    dot.textContent = state === 'done' ? '✓' : String(i + 1);
+    const text = document.createElement('span');
+    text.className = 'track-label';
+    text.textContent = (i === 1 && needsInfo) ? 'Informações solicitadas' : label;
+    li.append(dot, text);
+    steps.appendChild(li);
+  });
+
+  const note = document.createElement('p');
+  note.className = 'track-note';
+  const when = application.updated_at ? new Date(application.updated_at).toLocaleDateString('pt-BR') : '';
+  note.textContent = needsInfo
+    ? 'Nossa equipe precisa de informações adicionais. Fique atento ao contato pelo WhatsApp.'
+    : completed
+      ? 'Atendimento concluído.' + (when ? ' Atualizado em ' + when + '.' : '')
+      : 'Acompanhamento pelo WhatsApp.' + (when ? ' Última atualização em ' + when + '.' : '');
+
+  card.append(head, person, steps, note);
+  return card;
+}
+
 function renderApplications(applications) {
   applicationList.replaceChildren();
-  if (!applications.length) {
+  const drafts = applications.filter(a => a.status === 'draft');
+  const tracked = applications.filter(a => ['submitted','in_review','needs_information','completed'].includes(a.status));
+  const trackingRoot = document.querySelector('#portal-tracking');
+  const trackingSection = document.querySelector('#portal-tracking-section');
+  if (trackingRoot) {
+    trackingRoot.replaceChildren(...tracked.map(createTrackingCard));
+    trackingSection.hidden = tracked.length === 0;
+  }
+  if (!drafts.length) {
     const empty = document.createElement('div');
     empty.className = 'portal-empty';
-    empty.textContent = 'Você ainda não iniciou uma aplicação. Escolha “Nova aplicação” ou “Adicionar familiar” para começar.';
+    empty.textContent = tracked.length
+      ? 'Nenhum questionário em andamento. Use “Nova aplicação” ou “Adicionar familiar” para iniciar outro.'
+      : 'Você ainda não iniciou uma aplicação. Escolha “Nova aplicação” ou “Adicionar familiar” para começar.';
     applicationList.appendChild(empty);
     return;
   }
-  const drafts = applications.filter(a => a.status === 'draft');
-  const previous = [];
   drafts.forEach(a => applicationList.appendChild(createApplicationCard(a)));
-
 }
 
 function renderDocuments(applications) {
@@ -167,14 +233,13 @@ logoutButton.addEventListener('click', async () => {
       .select('id,country,status,current_step,form_data,created_at,updated_at')
       .eq('user_id',session.user.id)
       .eq('country','US')
-      .eq('status','draft')
       .order('updated_at',{ascending:false})
       .limit(100);
     if(error)throw error;
     const applications=data||[];
     renderApplications(applications);
-    window.__portalApplications=applications;
-    document.dispatchEvent(new CustomEvent('portal:applications',{detail:applications}));
+    window.__portalApplications=applications.filter(a=>a.status==='draft');
+    document.dispatchEvent(new CustomEvent('portal:applications',{detail:applications.filter(a=>a.status==='draft')}));
     if (new URLSearchParams(location.search).get('add_family') === '1') {
       familyDialog.showModal();
       history.replaceState(null,'','/portal.html');

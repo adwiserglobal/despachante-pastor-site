@@ -112,3 +112,24 @@
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .form-back:hover { transform: translateX(-3px); border-color: #d3ad5b; box-shadow: 0 8px 20px rgba(11,29,56,.08); }
+
+/* Acompanhamento de status */
+.portal-tracking-section { margin-top: 44px; }
+.track-card { padding: 24px 28px; border: 1px solid #e0e5eb; border-radius: 22px; background: #fff; box-shadow: 0 12px 36px rgba(11,29,56,.05); margin-bottom: 16px; }
+.track-card.needs-info { border-color: #ecd9a8; background: linear-gradient(180deg, #fffdf6, #fff); }
+.track-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.track-head h2 { margin: 0; font-family: "Manrope", sans-serif; font-size: 22px; letter-spacing: -.02em; }
+.track-card .applicant-label { margin: 8px 0 0; font-size: 13px; font-weight: 700; }
+.track-steps { display: flex; align-items: flex-start; list-style: none; margin: 24px 0 8px; padding: 0; }
+.track-step { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.track-step::before { content: ""; position: absolute; top: 15px; right: 50%; width: 100%; height: 3px; background: #e3e8ef; z-index: 0; }
+.track-step:first-child::before { display: none; }
+.track-step.is-done::before, .track-step.is-current::before { background: linear-gradient(90deg, #d3ad5b, #ecd595); }
+.track-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #e3e8ef; background: #fff; color: #98a3b3; font-size: 13px; font-weight: 800; }
+.track-step.is-done .track-dot { border-color: #d3ad5b; background: #d3ad5b; color: #04142e; }
+.track-step.is-current .track-dot { border-color: #d3ad5b; color: #0b1d38; box-shadow: 0 0 0 6px rgba(211,173,91,.2); animation: trackPulse 2s ease-in-out infinite; }
+.track-step.is-alert .track-dot { border-color: #c9812b; box-shadow: 0 0 0 6px rgba(201,129,43,.2); }
+.track-label { font-size: 12px; font-weight: 700; color: #98a3b3; }
+.track-step.is-done .track-label, .track-step.is-current .track-label { color: #0b1d38; }
+.track-note { margin: 14px 0 0; color: #6d7889; font-size: 13px; }
+@keyframes trackPulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(211,173,91,.22); } 50% { box-shadow: 0 0 0 9px rgba(211,173,91,.08); } }
