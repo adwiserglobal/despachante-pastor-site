@@ -11,14 +11,19 @@ const steps = [
       { name: 'birth_date', label: 'Data de Nascimento', hint: '(DD/MM/AAAA)', required: true },
       { name: 'birth_place', label: 'Local de Nascimento' },
       { name: 'marital_status', label: 'Estado Civil', type: 'select', options: ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'União estável', 'Outro'] },
+      { name: 'ex_spouse_name', label: 'Nome completo do ex-esposo(a)', required: true, showIf: { marital_status: 'Divorciado(a)' } },
+      { name: 'ex_spouse_birth_place', label: 'Cidade de nascimento do ex-esposo(a)', required: true, showIf: { marital_status: 'Divorciado(a)' } },
+      { name: 'ex_spouse_birth_date', label: 'Data de nascimento do ex-esposo(a)', hint: '(DD/MM/AAAA)', required: true, showIf: { marital_status: 'Divorciado(a)' } },
+      { name: 'marriage_date', label: 'Data do casamento', hint: '(DD/MM/AAAA)', required: true, showIf: { marital_status: 'Divorciado(a)' } },
+      { name: 'divorce_date', label: 'Data do divórcio', hint: '(DD/MM/AAAA)', required: true, showIf: { marital_status: 'Divorciado(a)' } },
       { name: 'nationality', label: 'Nacionalidade', required: true },
       { name: 'other_nationality', label: 'Possui outra nacionalidade?', type: 'yesno' },
       { name: 'other_nationality_name', label: 'Qual nacionalidade?', required: true, showIf: { other_nationality: 'sim' } },
       { name: 'other_nationality_passport', label: 'Possui passaporte dessa nacionalidade?', type: 'yesno', showIf: { other_nationality: 'sim' } },
       { name: 'other_nationality_file', label: 'Foto do passaporte da segunda nacionalidade, se disponível', type: 'file', showIf: { other_nationality: 'sim', other_nationality_passport: 'sim' } },
       { name: 'permanent_resident_elsewhere', label: 'Você é residente permanente de um país ou região diferente do seu país de origem?', type: 'yesno' },
-      { name: 'rg', label: 'RG', hint: 'Número com dígito' },
-      { name: 'us_ssn', label: 'Número do seguro social EUA' },
+      { name: 'rg', label: 'RG', hint: 'Somente números, com dígito (X se houver)' },
+      { name: 'us_ssn', label: 'Número do seguro social EUA', placeholder: '000-00-0000' },
       { name: 'address', label: 'Endereço Completo com CEP', autocomplete: 'street-address' },
       { name: 'city', label: 'Cidade', autocomplete: 'address-level2' },
       { name: 'state', label: 'Estado', autocomplete: 'address-level1' },
@@ -63,7 +68,7 @@ const steps = [
       { name: 'us_driver_license', label: 'Você tem ou já teve carteira de motorista americana?', type: 'yesno' },
       { name: 'had_us_visa', label: 'Tem visto emitido para o EUA?', type: 'yesno' },
       { name: 'previous_visa_issue_date', label: 'Data de emissão do visto', hint: '(DD/MM/AAAA)', showIf: { had_us_visa: 'sim' } },
-      { name: 'previous_visa_number', label: 'Número do visto', showIf: { had_us_visa: 'sim' } },
+      { name: 'previous_visa_number', label: 'Número do visto', hint: '8 dígitos, somente números', showIf: { had_us_visa: 'sim' } },
       { name: 'same_visa_type', label: 'Você está solicitando o mesmo tipo de visto solicitado anteriormente?', type: 'yesno', showIf: { had_us_visa: 'sim' } },
       { name: 'same_country_application', label: 'Você está se inscrevendo no mesmo país onde o visto anterior foi emitido? E este é o seu país de residência principal?', type: 'yesno', showIf: { had_us_visa: 'sim' } },
       { name: 'ten_fingerprints', label: 'Você já tirou impressão digital dos 10 dedos?', type: 'yesno' },
@@ -109,7 +114,7 @@ const steps = [
     description: '',
     fields: [
       { name: 'occupation', label: 'Ocupação principal', required: true },
-      { name: 'employer_school', label: 'Nome do empregador atual ou escola' },
+      { name: 'employer_school', label: 'Nome do empregador atual ou CNPJ da empresa' },
       { name: 'role', label: 'Função' },
       { name: 'employment_start', label: 'Data de admissão (DD/MM/AAAA)' },
       { name: 'employment_end', label: 'Data de desligamento (DD/MM/AAAA), se houver' },
@@ -223,7 +228,11 @@ function inputFor(field) {
       : field.name === 'passport_number' ? 'maxlength="24" autocapitalize="characters"'
       : ['primary_phone','secondary_phone','business_phone','payer_phone','employer_phone'].includes(field.name)
         ? 'inputmode="tel" maxlength="19"'
-      : field.name === 'monthly_income' ? 'inputmode="decimal"' : '';
+      : field.name === 'monthly_income' ? 'inputmode="decimal" placeholder="Ex.: 5.000,00"'
+      : field.name === 'us_ssn' ? 'inputmode="numeric" maxlength="11"'
+      : field.name === 'rg' ? 'inputmode="numeric" maxlength="14" autocapitalize="characters"'
+      : field.name === 'previous_visa_number' ? 'inputmode="numeric" maxlength="8"'
+      : field.name === 'employer_school' ? 'maxlength="160"' : '';
     control = `<input name="${field.name}" type="${field.type || 'text'}" value="${escapeHtml(value)}" ${extra} ${req} ${autocomplete} ${placeholder}>`;
   }
 

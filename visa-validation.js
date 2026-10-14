@@ -4,12 +4,13 @@
   const dateFields = new Set([
     'birth_date','father_birth_date','mother_birth_date','passport_issue_date',
     'passport_expiry_date','arrival_date','last_us_arrival','previous_visa_issue_date',
-    'previous_job_start','previous_job_end','spouse_birth_date','employment_start','employment_end','course_start','course_end'
+    'previous_job_start','previous_job_end','spouse_birth_date','employment_start','employment_end','course_start','course_end','ex_spouse_birth_date','marriage_date','divorce_date'
   ]);
-  const birthFields = new Set(['birth_date','father_birth_date','mother_birth_date','spouse_birth_date']);
+  const birthFields = new Set(['birth_date','father_birth_date','mother_birth_date','spouse_birth_date','ex_spouse_birth_date']);
   const pastFields = new Set([
     ...birthFields,'passport_issue_date','last_us_arrival',
-    'previous_visa_issue_date','previous_job_start','previous_job_end','employment_start','employment_end','course_start'
+    'previous_visa_issue_date','previous_job_start','previous_job_end','employment_start','employment_end','course_start',
+    'marriage_date','divorce_date'
   ]);
   const phoneFields = new Set(['primary_phone','secondary_phone','business_phone','payer_phone','employer_phone']);
 
@@ -99,6 +100,18 @@
       const end=parseDate(data.previous_job_end);
       if(end && parsed>end)return 'A admissão não pode ser posterior ao desligamento.';
     }
+    if(name==='divorce_date' && data.marriage_date){
+      const m=parseDate(data.marriage_date);
+      if(m && parsed<=m)return 'O divórcio deve ser posterior à data do casamento.';
+    }
+    if(name==='marriage_date' && data.divorce_date){
+      const dv=parseDate(data.divorce_date);
+      if(dv && parsed>=dv)return 'O casamento deve ser anterior à data do divórcio.';
+    }
+    if(name==='marriage_date' && data.birth_date){
+      const b=parseDate(data.birth_date);
+      if(b && parsed<=b)return 'A data do casamento deve ser posterior ao seu nascimento.';
+    }
     return '';
   }
 
@@ -110,6 +123,40 @@
     if(s.length<3)return '('+s;
     return '('+s.slice(0,2)+') '+s.slice(2,s.length>10?7:6)
       +(s.length>(s.length>10?7:6)?'-'+s.slice(s.length>10?7:6):'');
+  }
+  function formatSsn(value) {
+    const s=digits(value).slice(0,9);
+    return s.slice(0,3)+(s.length>3?'-'+s.slice(3,5):'')+(s.length>5?'-'+s.slice(5):'');
+  }
+  function formatRg(value) {
+    return String(value||'').toUpperCase().replace(/[^0-9X.\-]/g,'').slice(0,14);
+  }
+  function formatMoney(value) {
+    const raw=String(value||'').replace(/[^\d,]/g,'');
+    const parts=raw.split(',');
+    const int=parts[0].replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    return parts.length>1?int+','+parts.slice(1).join('').slice(0,2):int;
+  }
+  function formatCnpj(value) {
+    const s=digits(value).slice(0,14);
+    return s.slice(0,2)+(s.length>2?'.'+s.slice(2,5):'')+(s.length>5?'.'+s.slice(5,8):'')
+      +(s.length>8?'/'+s.slice(8,12):'')+(s.length>12?'-'+s.slice(12):'');
+  }
+  function validCnpj(value) {
+    const s=digits(value);
+    if(s.length!==14||/^(\d)\1{13}$/.test(s))return false;
+    function check(length) {
+      const weights=length===12?[5,4,3,2,9,8,7,6,5,4,3,2]:[6,5,4,3,2,9,8,7,6,5,4,3,2];
+      let sum=0;
+      for(let i=0;i<length;i++)sum+=Number(s[i])*weights[i];
+      const r=sum%11;
+      return Number(s[length])===(r<2?0:11-r);
+    }
+    return check(12)&&check(13);
+  }
+  // Campo de empregador aceita nome ou CNPJ: só trata como CNPJ se tiver apenas dígitos e pontuação
+  function looksLikeCnpj(value) {
+    return /^[\d./\-\s]+$/.test(String(value||'')) && /\d/.test(String(value||''));
   }
   function validate(field,value,data={}) {
     const name=field.name;
@@ -130,15 +177,30 @@
       return 'Informe um endereço de e-mail válido.';
     if(name==='passport_number'&&!/^[\p{L}\p{N} .-]{5,24}$/u.test(v))
       return 'Confira o número do passaporte conforme o documento.';
-    if(name==='us_ssn' && digits(v).length!==9)return 'O número de seguro social dos EUA deve ter 9 dígitos.';
-    if(name==='monthly_income' && !/^[\d.,\sR$]+$/.test(v))
-      return 'Informe um valor numérico em reais.';
+    if(name==='us_ssn'){
+      const s=digits(v);
+      if(s.length!==9)return 'O número de seguro social dos EUA deve ter 9 dígitos.';
+      if(/^(000|666|9)/.test(s)||s.slice(3,5)==='00'||s.slice(5)==='0000')return 'Número de seguro social inválido. Confira os dígitos.';
+    }
+    if(name==='rg' && !/^[0-9X.\-]{5,14}$/.test(v))return 'Informe o RG somente com números (e X, se houver).';
+    if(name==='rg' && digits(v).length<5)return 'O RG deve ter ao menos 5 dígitos.';
+    if(name==='previous_visa_number' && !/^\d{8}$/.test(v))return 'O número do visto deve ter 8 dígitos, somente números.';
+    if(name==='employer_school' && looksLikeCnpj(v) && !validCnpj(v))return 'CNPJ inválido. Confira os 14 dígitos ou informe o nome da empresa.';
+    if(name==='monthly_income'){
+      if(!/^\d{1,3}(\.\d{3})*(,\d{1,2})?$|^\d+(,\d{1,2})?$/.test(v))return 'Informe um valor numérico em reais, por exemplo 5.000,00.';
+      if(Number(v.replace(/\./g,'').replace(',','.'))<=0)return 'A renda mensal deve ser maior que zero.';
+    }
     return '';
   }
   function format(name,value) {
     if(name==='cpf')return formatCpf(value);
     if(dateFields.has(name))return formatDate(value);
     if(phoneFields.has(name))return formatPhone(value);
+    if(name==='us_ssn')return formatSsn(value);
+    if(name==='rg')return formatRg(value);
+    if(name==='monthly_income')return formatMoney(value);
+    if(name==='previous_visa_number')return digits(value).slice(0,8);
+    if(name==='employer_school')return looksLikeCnpj(value)?formatCnpj(value):value;
     if(name==='passport_number')return String(value||'').toUpperCase().replace(/[^\p{L}\p{N} .-]/gu,'').slice(0,24);
     return value;
   }
