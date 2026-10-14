@@ -1,0 +1,164 @@
+/* Redesign da hero — mantém a identidade azul-marinho + dourado */
+.hero {
+  background:
+    radial-gradient(ellipse 60% 55% at 85% 30%, rgba(42, 94, 161, 0.38), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 8% 95%, rgba(211, 173, 91, 0.14), transparent 70%),
+    linear-gradient(160deg, var(--navy-950) 0%, var(--navy-900) 55%, #08214b 100%);
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(226, 197, 127, 0.45), transparent);
+  z-index: 1;
+}
+
+.hero-layout {
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 64px;
+}
+
+/* Coluna de texto com filete dourado lateral */
+.hero-copy {
+  position: relative;
+  padding-left: 30px;
+}
+
+.hero-copy::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--gold-300), rgba(211, 173, 91, 0.05));
+}
+
+.eyebrow {
+  padding: 8px 16px 8px 12px;
+  border-color: rgba(226, 197, 127, 0.3);
+  background: rgba(10, 37, 78, 0.6);
+  backdrop-filter: blur(8px);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10.5px;
+}
+
+.hero h1 {
+  margin-top: 26px;
+  font-size: clamp(44px, 5.6vw, 76px);
+  line-height: 1.02;
+}
+
+.hero h1 span {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.hero h1 span::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  bottom: 0;
+  width: 96px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f4e4b7, #c9a047);
+}
+
+.hero-text {
+  margin-top: 22px;
+  font-size: 17.5px;
+  color: #cbd6e6;
+}
+
+/* Diferenciais viram cartões de vidro */
+.trust-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 38px;
+  max-width: 640px;
+}
+
+.trust-row span {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 14px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.trust-row i {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  background: rgba(211, 173, 91, 0.18);
+  border: 1px solid rgba(226, 197, 127, 0.3);
+}
+
+/* Painel do orçamento: barra dourada no topo e mais respiro */
+.quote-panel {
+  max-width: 540px;
+  padding: 34px 30px 26px;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.quote-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 30px;
+  right: 30px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, #f4e4b7, #c9a047 60%, rgba(201, 160, 71, 0));
+}
+
+.quote-kicker {
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: rgba(211, 173, 91, 0.12);
+  border: 1px solid rgba(226, 197, 127, 0.22);
+  margin-bottom: 14px;
+}
+
+.quote-panel h2 {
+  font-size: clamp(24px, 2.6vw, 33px);
+}
+
+.quote-field input,
+.quote-field select {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.quote-submit {
+  box-shadow: 0 14px 34px rgba(201, 160, 71, 0.28);
+}
+
+@media (max-width: 980px) {
+  .hero-layout { gap: 36px; }
+  .hero-copy { padding-left: 22px; }
+}
+
+@media (max-width: 640px) {
+  .hero-copy { padding-left: 0; }
+  .hero-copy::before { display: none; }
+  .trust-row { grid-template-columns: 1fr; }
+  .trust-row span { flex-direction: row; align-items: center; padding: 11px 14px; }
+  .hero h1 span::after { width: 72px; }
+}
