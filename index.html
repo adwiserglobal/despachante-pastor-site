@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="./contact-mask.css" />
     <link rel="stylesheet" href="./hero-redesign.css" />
     <link rel="stylesheet" href="./header-scroll.css" />
+    <link rel="stylesheet" href="./animations.css" />
   </head>
   <body>
     <div class="site-shell">
@@ -36,7 +37,7 @@
             <a href="https://www.instagram.com/desp.pastor/" target="_blank" rel="noopener noreferrer">Instagram</a>
           </nav>
 
-          <a class="button button-gold desktop-cta" href="#contato">Solicitar atendimento</a>
+          <a class="button button-gold desktop-cta" href="https://wa.me/551144382633?text=Ol%C3%A1%21%20Gostaria%20de%20solicitar%20um%20atendimento%20com%20o%20Despachante%20Pastor." target="_blank" rel="noopener noreferrer">Solicitar atendimento</a>
 
           <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
             <span></span><span></span><span></span>
@@ -48,7 +49,7 @@
           <a href="#diferenciais">Diferenciais</a>
           <a href="#processo">Como funciona</a>
           <a href="#contato">Contato</a>
-          <a class="button button-gold" href="#contato">Solicitar atendimento</a>
+          <a class="button button-gold" href="https://wa.me/551144382633?text=Ol%C3%A1%21%20Gostaria%20de%20solicitar%20um%20atendimento%20com%20o%20Despachante%20Pastor." target="_blank" rel="noopener noreferrer">Solicitar atendimento</a>
         </div>
       </header>
 
@@ -57,6 +58,33 @@
           <div class="hero-grid"></div>
           <div class="hero-glow hero-glow-one"></div>
           <div class="hero-glow hero-glow-two"></div>
+          <div class="hero-art" aria-hidden="true">
+            <svg viewBox="0 0 800 800" focusable="false">
+              <defs>
+                <radialGradient id="globeFill" cx="40%" cy="38%" r="70%">
+                  <stop offset="0" stop-color="#2a5ea1" stop-opacity=".30"/>
+                  <stop offset="1" stop-color="#0a2145" stop-opacity="0"/>
+                </radialGradient>
+              </defs>
+              <g class="art-globe" fill="none" stroke="#e2c57f" stroke-width="1.2">
+                <circle cx="400" cy="400" r="330" fill="url(#globeFill)" stroke-opacity=".55"/>
+                <ellipse cx="400" cy="400" rx="330" ry="110" stroke-opacity=".28"/>
+                <ellipse cx="400" cy="400" rx="330" ry="220" stroke-opacity=".22"/>
+                <ellipse cx="400" cy="400" rx="110" ry="330" stroke-opacity=".28"/>
+                <ellipse cx="400" cy="400" rx="220" ry="330" stroke-opacity=".22"/>
+                <line x1="70" y1="400" x2="730" y2="400" stroke-opacity=".3"/>
+                <line x1="400" y1="70" x2="400" y2="730" stroke-opacity=".3"/>
+                <circle cx="400" cy="400" r="380" stroke-opacity=".16" stroke-dasharray="3 10"/>
+                <circle cx="400" cy="400" r="430" stroke-opacity=".10"/>
+              </g>
+              <path id="flight" class="art-route" d="M170 520 Q 360 150 640 300" fill="none" stroke="#ecd9a8" stroke-width="1.6" stroke-dasharray="4 9" stroke-opacity=".7"/>
+              <g fill="#e2c57f">
+                <circle cx="170" cy="520" r="5"/><circle class="art-pulse" cx="170" cy="520" r="5" fill="none" stroke="#e2c57f"/>
+                <circle cx="640" cy="300" r="5"/><circle class="art-pulse art-pulse-2" cx="640" cy="300" r="5" fill="none" stroke="#e2c57f"/>
+                <circle r="4" fill="#fff"><animateMotion dur="7s" repeatCount="indefinite"><mpath href="#flight"/></animateMotion></circle>
+              </g>
+            </svg>
+          </div>
 
           <div class="container hero-layout">
             <div class="hero-copy reveal">
@@ -303,10 +331,11 @@
 
     <script src="./script.js"></script>
     <script src="./header-scroll.js"></script>
+    <script src="./animations.js"></script>
     <script>
       const quotePrivacyNote = document.querySelector('.quote-note');
       if (quotePrivacyNote) {
-        quotePrivacyNote.innerHTML = '<span aria-hidden="true">⌁</span> Ao clicar em solicitar orçamento, você concorda com a política de privacidade.';
+        quotePrivacyNote.innerHTML = 'Ao clicar em solicitar orçamento, você concorda com a <a href="./privacidade.html">política de privacidade</a>.';
       }
     </script>
     <a class="floating-phone" href="tel:+551144382633" aria-label="Ligar" title="Ligar: (11) 4438-2633">☎</a>

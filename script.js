@@ -142,7 +142,7 @@ if (isHomePage) {
           </div>
           <button class="button button-gold quote-submit" type="submit">Solicitar orçamento <span aria-hidden="true">↗</span></button>
           <div class="quote-status" id="quote-status" role="status" aria-live="polite"></div>
-          <div class="quote-note">Ao clicar em solicitar orçamento, você concorda com a política de privacidade.</div>
+          <div class="quote-note">Ao clicar em solicitar orçamento, você concorda com a <a href="./privacidade.html">política de privacidade</a>.</div>
         </form>
       </div>
     `;
