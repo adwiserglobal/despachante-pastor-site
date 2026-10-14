@@ -149,7 +149,8 @@ function createTrackingCard(application) {
 function renderApplications(applications) {
   applicationList.replaceChildren();
   const drafts = applications.filter(a => a.status === 'draft');
-  const tracked = applications.filter(a => ['submitted','in_review','needs_information','completed'].includes(a.status));
+  // Só aparece depois que o questionário foi enviado (submitted_at) e a equipe alterou o status
+  const tracked = applications.filter(a => a.submitted_at && ['in_review','needs_information','completed'].includes(a.status));
   const trackingRoot = document.querySelector('#portal-tracking');
   const trackingSection = document.querySelector('#portal-tracking-section');
   if (trackingRoot) {
@@ -230,7 +231,7 @@ logoutButton.addEventListener('click', async () => {
     }
     userEmail.textContent = session.user.email || '';
     const {data, error} = await portalSb.from('visa_applications')
-      .select('id,country,status,current_step,form_data,created_at,updated_at')
+      .select('id,country,status,current_step,form_data,created_at,updated_at,submitted_at')
       .eq('user_id',session.user.id)
       .eq('country','US')
       .order('updated_at',{ascending:false})
