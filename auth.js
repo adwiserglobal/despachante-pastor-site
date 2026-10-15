@@ -40,7 +40,7 @@ function setMode(nextMode) {
   passwordGroup.hidden = forgot;
   passwordInput.required = !forgot;
   forgotRow.hidden = mode !== 'login';
-  backRow.hidden = !forgot;
+  backButton.hidden = !forgot;
   passwordInput.autocomplete = signup ? 'new-password' : 'current-password';
   authTitle.textContent = forgot ? 'Recupere sua senha' : signup ? 'Crie sua conta' : 'Entre na sua conta';
   authSubtitle.textContent = forgot
@@ -52,8 +52,8 @@ function setMode(nextMode) {
 }
 
 forgotLink.addEventListener('click', () => setMode('forgot'));
-const backRow = document.querySelector('#back-login-row');
-document.querySelector('#back-login').addEventListener('click', () => setMode('login'));
+const backButton = document.querySelector('#back-login');
+backButton.addEventListener('click', () => setMode('login'));
 
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => setMode(tab.dataset.mode));
