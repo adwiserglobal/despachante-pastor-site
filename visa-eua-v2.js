@@ -533,8 +533,8 @@ async function ensureApplication() {
     const {data, error} = await sb.from('visa_applications').select('*')
       .eq('id',requestedId).eq('user_id',state.user.id).eq('country','US').maybeSingle();
     if(error)throw error;
-    if(!data)throw new Error('Aplicação não encontrada nesta conta.');
-    if(data.status!=='draft')throw new Error('Esta aplicação já foi enviada. Acompanhe na área do cliente.');
+    if(!data)throw Object.assign(new Error('Aplicação não encontrada nesta conta.'),{userFacing:true});
+    if(data.status!=='draft')throw Object.assign(new Error('Esta aplicação já foi enviada. Acompanhe na área do cliente.'),{userFacing:true});
     return data;
   }
 
@@ -548,9 +548,9 @@ async function ensureApplication() {
 
   const permittedRelations = new Set(['Titular','Cônjuge','Filho(a)','Pai','Mãe','Irmão(ã)','Avô/Avó','Neto(a)','Outro familiar']);
   const relationship = params.get('relationship') || 'Titular';
-  if(!permittedRelations.has(relationship))throw new Error('Selecione um grau de parentesco válido.');
+  if(!permittedRelations.has(relationship))throw Object.assign(new Error('Selecione um grau de parentesco válido.'),{userFacing:true});
   const name=(params.get('applicant_name') || '').trim().slice(0,160);
-  if(relationship!=='Titular' && !name)throw new Error('Informe o nome completo do familiar.');
+  if(relationship!=='Titular' && !name)throw Object.assign(new Error('Informe o nome completo do familiar.'),{userFacing:true});
   const formData = {applicant_relationship:relationship};
   if(createNew) {
     // Reaproveita dados comuns da família (endereço, viagem, pagador, contato nos EUA) para não recomeçar do zero
@@ -569,7 +569,7 @@ async function ensureApplication() {
     user_id:state.user.id,country:'US',status:'draft',form_data:formData,current_step:0
   }).select('*').single();
   if(error) {
-    if(error.code==='23505')throw new Error('Você já tem um questionário em andamento. Envie-o primeiro para adicionar outro solicitante.');
+    if(error.code==='23505')throw Object.assign(new Error('Você já tem um questionário em andamento. Continue e envie esse questionário na área do cliente antes de iniciar outro.'),{userFacing:true});
     throw error;
   }
   window.history.replaceState(null,'','/vistos/estados-unidos?application='+encodeURIComponent(created.id));
@@ -718,6 +718,8 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
   } catch (error) {
     console.error(error);
     await window.PastorLoader?.hide?.(350);
-    loading.textContent = 'Não foi possível carregar seu formulário. Atualize a página ou tente novamente mais tarde.';
+    loading.textContent = error?.userFacing && error.message
+      ? error.message
+      : 'Não foi possível carregar seu formulário. Atualize a página ou tente novamente mais tarde.';
   }
 })();
