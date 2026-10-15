@@ -229,14 +229,62 @@ function buildStatusSelect(value, options, onChange) {
       await onChange(select.value);
       value = select.value;
     } catch (error) {
-      console.error(error);
       select.value = previous;
-      window.alert(error?.message || 'Não foi possível atualizar o status.');
+      if (!error?.silent) {
+        console.error(error);
+        window.alert(error?.message || 'Não foi possível atualizar o status.');
+      }
     } finally {
       select.disabled = false;
     }
   });
   return select;
+}
+
+function askInfoRequest(applicantName) {
+  return new Promise((resolve) => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'info-request-dialog';
+    const form = document.createElement('form');
+    form.method = 'dialog';
+    form.className = 'info-request-form';
+    form.append(
+      createText('span', 'INFORMAÇÕES ADICIONAIS'),
+      createText('h2', 'O que você precisa do cliente?'),
+      createText('p', `${applicantName || 'O cliente'} verá este pedido na área do cliente e poderá responder com texto e anexos.`)
+    );
+    const area = document.createElement('textarea');
+    area.maxLength = 4000;
+    area.rows = 6;
+    area.placeholder = 'Ex.: Envie o comprovante de renda dos últimos 3 meses e o comprovante de residência.';
+    area.required = true;
+    const actions = document.createElement('div');
+    actions.className = 'info-request-actions';
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'detail-button secondary-button';
+    cancel.textContent = 'Cancelar';
+    const send = document.createElement('button');
+    send.type = 'submit';
+    send.className = 'detail-button';
+    send.textContent = 'Enviar pedido';
+    actions.append(cancel, send);
+    form.append(area, actions);
+    dialog.appendChild(form);
+    document.body.appendChild(dialog);
+    let result = null;
+    cancel.addEventListener('click', () => dialog.close());
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const text = area.value.trim();
+      if (text.length < 3) { area.focus(); return; }
+      result = text;
+      dialog.close();
+    });
+    dialog.addEventListener('close', () => { dialog.remove(); resolve(result); });
+    dialog.showModal();
+    area.focus();
+  });
 }
 
 function buildDeleteButton(what, onConfirm) {
@@ -323,10 +371,22 @@ function renderVisas() {
 
     const statusCell = document.createElement('td');
     statusCell.appendChild(buildStatusSelect(row.status, ['draft', 'submitted', 'in_review', 'needs_information', 'completed', 'archived'], async (status) => {
-      await api('update_visa_status', { id: row.id, status });
+      if (status === 'needs_information') {
+        const message = await askInfoRequest(row.applicant_name);
+        if (!message) throw Object.assign(new Error('cancelado'), { silent: true });
+        await api('request_info', { id: row.id, message });
+        row.info_request = 'open';
+      } else {
+        await api('update_visa_status', { id: row.id, status });
+      }
       row.status = status;
       renderVisas();
     }));
+    if (row.info_request === 'answered' && row.status === 'needs_information') {
+      statusCell.appendChild(createText('small', '✓ Cliente respondeu'));
+    } else if (row.info_request === 'open' && row.status === 'needs_information') {
+      statusCell.appendChild(createText('small', 'Aguardando cliente'));
+    }
     tr.appendChild(statusCell);
 
     const action = document.createElement('td');
@@ -361,7 +421,7 @@ function humanValue(value) {
 
 async function openVisa(row) {
   try {
-    const { row: detail } = await api('get_visa', { id: row.id });
+    const { row: detail, info_requests: infoRequests = [] } = await api('get_visa', { id: row.id });
     detailTitle.textContent = detail?.form_data?.full_name || row.applicant_name || 'Solicitação de visto';
     detailMeta.textContent = `${detail.form_data?.applicant_relationship || 'Titular'} • ${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
     detailContent.replaceChildren();
@@ -403,6 +463,46 @@ async function openVisa(row) {
     });
 
     section.appendChild(grid);
+    if (infoRequests.length) {
+      const requestsSection = document.createElement('section');
+      requestsSection.className = 'visa-data-section';
+      requestsSection.appendChild(createText('h3', 'Pedidos de informação'));
+      infoRequests.forEach((request) => {
+        const box = document.createElement('div');
+        box.className = 'visa-data-item full info-thread';
+        box.appendChild(createText('small', `Pedido em ${fmtDate(request.created_at)}${request.requested_by ? ' · ' + request.requested_by : ''}`));
+        box.appendChild(createText('strong', request.message));
+        const reply = document.createElement('div');
+        reply.className = 'info-reply';
+        if (request.status === 'answered') {
+          reply.appendChild(createText('small', `Resposta do cliente em ${fmtDate(request.replied_at)}`));
+          if (request.reply_text) reply.appendChild(createText('strong', request.reply_text));
+          (request.reply_files || []).forEach((file, index) => {
+            const open = document.createElement('button');
+            open.className = 'detail-button';
+            open.type = 'button';
+            open.textContent = `Abrir anexo ${index + 1} ↗`;
+            open.addEventListener('click', async () => {
+              open.disabled = true;
+              const popup = window.open('', '_blank');
+              try {
+                const { url } = await api('get_info_reply_file', { request_id: request.id, index });
+                if (popup) { popup.opener = null; popup.location.href = url; } else { window.location.assign(url); }
+              } catch (error) {
+                if (popup) popup.close();
+                window.alert(error?.message || 'Não foi possível abrir este anexo.');
+              } finally { open.disabled = false; }
+            });
+            reply.appendChild(open);
+          });
+        } else {
+          reply.appendChild(createText('small', 'Aguardando resposta do cliente'));
+        }
+        box.appendChild(reply);
+        requestsSection.appendChild(box);
+      });
+      detailContent.appendChild(requestsSection);
+    }
     detailContent.appendChild(section);
     detailDialog.showModal();
   } catch (error) {

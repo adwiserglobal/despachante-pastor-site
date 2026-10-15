@@ -5,3 +5,9 @@
 -- Policy extra em visa_applications: o cliente lê o status das próprias aplicações em qualquer status (Storage continua restrito a rascunhos).
 -- Gatilho notify_client_on_status_change (SECURITY DEFINER, execução revogada para anon/authenticated):
 --   in_review -> "Sua solicitação está em análise"; needs_information -> "Precisamos de mais informações"; completed -> "Solicitação concluída".
+
+-- Pedidos de informação adicional (já aplicado):
+--   tabela visa_info_requests (message do despachante, reply_text/reply_files do cliente, status open|answered)
+--   RLS: cliente lê as próprias e só responde (update) enquanto 'open'; trigger guard_info_request_update impede alterar a mensagem
+--   trigger notify_client_on_info_request: cria o aviso do sino com a mensagem
+--   storage.objects: cliente envia/lê anexos em <uid>/<application>/info_reply/ apenas enquanto houver pedido aberto

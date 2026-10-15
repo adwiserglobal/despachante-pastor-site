@@ -141,3 +141,22 @@
 .save-indicator.saved .cloud-check { opacity: 1; }
 .save-indicator.saving .save-cloud { color: #d3ad5b; animation: cloudPulse 1.1s ease-in-out infinite !important; }
 @keyframes cloudPulse { 0%, 100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(-2px); opacity: .55; } }
+
+/* Pedido de informações adicionais */
+.info-box { margin-top: 16px; padding: 16px 18px; border: 1px solid #ecd9a8; border-radius: 16px; background: #fffdf6; }
+.info-box.is-answered { border-color: #e0e5eb; background: #f8fafc; }
+.info-ask small { display: block; color: #9c752e; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.info-ask p { margin: 6px 0 0; color: #0b1d38; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.info-done { margin-top: 10px; color: #216745; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.info-form { margin-top: 14px; }
+.info-form textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid #dfe5ec; border-radius: 14px; background: #fff; font: inherit; font-size: 14px; resize: vertical; }
+.info-form textarea:focus { outline: none; border-color: #d3ad5b; box-shadow: 0 0 0 4px rgba(211,173,91,.15); }
+.info-files { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.info-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 6px 8px 6px 12px; border-radius: 999px; background: #eef2f7; color: #0b1d38; font-size: 12px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.info-chip button { border: 0; background: none; color: #6d7889; font-size: 16px; line-height: 1; cursor: pointer; }
+.info-bar { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.info-plus { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #dfe5ec; border-radius: 50%; background: #fff; color: #0b1d38; font-size: 24px; line-height: 1; cursor: pointer; transition: border-color .2s ease, transform .2s ease; }
+.info-plus:hover { border-color: #d3ad5b; transform: rotate(90deg); }
+.info-status { flex: 1; color: #6d7889; font-size: 12px; }
+.info-send { min-height: 40px; padding: 0 20px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #ecd595, #d3ad5b); color: #04142e; font-weight: 800; font-size: 13px; cursor: pointer; }
+.info-send:disabled, .info-plus:disabled { opacity: .55; cursor: wait; }

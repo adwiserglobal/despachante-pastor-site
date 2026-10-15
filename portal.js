@@ -87,6 +87,154 @@ function createApplicationCard(application) {
   return card;
 }
 
+let currentUserId = null;
+let infoByApp = {};
+
+// --- Anexos das respostas ao pedido de informações ---
+async function detectFileKind(file) {
+  const head = new Uint8Array(await file.slice(0, 1024).arrayBuffer());
+  const ascii = String.fromCharCode(...head);
+  if (ascii.includes('%PDF')) return 'application/pdf';
+  if (head[0] === 0x89 && ascii.slice(1, 4) === 'PNG') return 'image/png';
+  if (head[0] === 0xFF && head[1] === 0xD8) return 'image/jpeg';
+  if (ascii.startsWith('RIFF') && ascii.slice(8, 12) === 'WEBP') return 'image/webp';
+  if (ascii.slice(4, 8) === 'ftyp' && /heic|heix|hevc|mif1|heif/.test(ascii.slice(8, 16))) return 'heic';
+  return null;
+}
+
+async function shrinkImage(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 2600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('compress')), 'image/jpeg', 0.85));
+}
+
+async function prepareReplyFile(file) {
+  if (file.size === 0) throw new Error(file.name + ': o arquivo está vazio.');
+  const kind = await detectFileKind(file);
+  if (kind === 'heic') throw new Error(file.name + ': fotos HEIC do iPhone não são aceitas. Envie em JPG, PNG ou PDF.');
+  if (!kind) throw new Error(file.name + ': envie uma imagem (JPG, PNG, WebP) ou PDF.');
+  let blob = file;
+  let type = kind;
+  if (kind !== 'application/pdf' && file.size > 2 * 1024 * 1024) {
+    try { blob = await shrinkImage(file); type = 'image/jpeg'; } catch (error) { console.error(error); }
+  }
+  if (blob.size > 10485760) throw new Error(file.name + ': o arquivo é maior que 10 MB.');
+  return { blob, type, name: file.name };
+}
+
+function createInfoRequestBox(request, application) {
+  const box = document.createElement('div');
+  box.className = 'info-box' + (request.status === 'open' ? ' is-open' : ' is-answered');
+
+  const ask = document.createElement('div');
+  ask.className = 'info-ask';
+  const label = document.createElement('small');
+  label.textContent = 'Mensagem da equipe · ' + new Date(request.created_at).toLocaleDateString('pt-BR');
+  const text = document.createElement('p');
+  text.textContent = request.message;
+  ask.append(label, text);
+  box.appendChild(ask);
+
+  if (request.status === 'answered') {
+    const done = document.createElement('div');
+    done.className = 'info-done';
+    const files = Array.isArray(request.reply_files) ? request.reply_files.length : 0;
+    done.textContent = '✓ Você respondeu em ' + new Date(request.replied_at).toLocaleDateString('pt-BR')
+      + (request.reply_text ? ': “' + request.reply_text.slice(0, 200) + (request.reply_text.length > 200 ? '…' : '') + '”' : '')
+      + (files ? ' · ' + files + ' anexo' + (files > 1 ? 's' : '') : '');
+    box.appendChild(done);
+    return box;
+  }
+
+  const form = document.createElement('form');
+  form.className = 'info-form';
+  const area = document.createElement('textarea');
+  area.rows = 3;
+  area.maxLength = 4000;
+  area.placeholder = 'Escreva sua resposta…';
+  const fileList = document.createElement('div');
+  fileList.className = 'info-files';
+  const bar = document.createElement('div');
+  bar.className = 'info-bar';
+  const plus = document.createElement('button');
+  plus.type = 'button';
+  plus.className = 'info-plus';
+  plus.title = 'Adicionar arquivo';
+  plus.setAttribute('aria-label', 'Adicionar arquivo');
+  plus.textContent = '+';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = 'image/jpeg,image/png,image/webp,application/pdf';
+  input.hidden = true;
+  const send = document.createElement('button');
+  send.type = 'submit';
+  send.className = 'info-send';
+  send.textContent = 'Enviar resposta';
+  const status = document.createElement('span');
+  status.className = 'info-status';
+  bar.append(plus, status, send);
+  form.append(area, fileList, bar, input);
+
+  let selected = [];
+  function renderFiles() {
+    fileList.replaceChildren();
+    selected.forEach((file, index) => {
+      const chip = document.createElement('span');
+      chip.className = 'info-chip';
+      chip.textContent = file.name;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.setAttribute('aria-label', 'Remover ' + file.name);
+      remove.textContent = '×';
+      remove.addEventListener('click', () => { selected.splice(index, 1); renderFiles(); });
+      chip.appendChild(remove);
+      fileList.appendChild(chip);
+    });
+  }
+  plus.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    selected = selected.concat([...input.files]).slice(0, 10);
+    input.value = '';
+    renderFiles();
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const reply = area.value.trim();
+    if (!reply && !selected.length) { status.textContent = 'Escreva uma resposta ou adicione um arquivo.'; return; }
+    send.disabled = plus.disabled = true;
+    status.textContent = 'Enviando…';
+    const uploaded = [];
+    try {
+      for (const original of selected) {
+        const prepared = await prepareReplyFile(original);
+        const extension = { 'application/pdf': 'pdf', 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[prepared.type];
+        const path = currentUserId + '/' + application.id + '/info_reply/' + Date.now() + '_' + crypto.randomUUID() + '.' + extension;
+        const { error } = await portalSb.storage.from('visa-documents').upload(path, prepared.blob, { contentType: prepared.type, upsert: false });
+        if (error) throw error;
+        uploaded.push(path);
+      }
+      const { error } = await portalSb.from('visa_info_requests')
+        .update({ status: 'answered', reply_text: reply || null, reply_files: uploaded })
+        .eq('id', request.id);
+      if (error) throw error;
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      status.textContent = error.message || 'Não foi possível enviar. Tente novamente.';
+      send.disabled = plus.disabled = false;
+    }
+  });
+  box.appendChild(form);
+  return box;
+}
+
 const TRACK_STEPS = ['Enviado', 'Em análise', 'Concluído'];
 
 function trackIndex(status) {
@@ -137,7 +285,7 @@ function createTrackingCard(application) {
   note.className = 'track-note';
   const when = application.updated_at ? new Date(application.updated_at).toLocaleDateString('pt-BR') : '';
   note.textContent = needsInfo
-    ? 'Nossa equipe precisa de informações adicionais. Fique atento ao contato pelo WhatsApp.'
+    ? 'Nossa equipe precisa de informações adicionais. Responda abaixo.'
     : application.status === 'submitted'
       ? 'Questionário recebido. Nossa equipe vai iniciar a análise em breve.'
     : completed
@@ -145,6 +293,7 @@ function createTrackingCard(application) {
       : 'Acompanhamento pelo WhatsApp.' + (when ? ' Última atualização em ' + when + '.' : '');
 
   card.append(head, person, steps, note);
+  (infoByApp[application.id] || []).slice(0, 3).forEach((request) => card.appendChild(createInfoRequestBox(request, application)));
   return card;
 }
 
@@ -232,6 +381,7 @@ logoutButton.addEventListener('click', async () => {
       return;
     }
     userEmail.textContent = session.user.email || '';
+    currentUserId = session.user.id;
     const {data, error} = await portalSb.from('visa_applications')
       .select('id,country,status,current_step,form_data,created_at,updated_at,submitted_at')
       .eq('user_id',session.user.id)
@@ -240,6 +390,11 @@ logoutButton.addEventListener('click', async () => {
       .limit(100);
     if(error)throw error;
     const applications=data||[];
+    const {data:infoRows}=await portalSb.from('visa_info_requests')
+      .select('id,application_id,message,created_at,status,reply_text,reply_files,replied_at')
+      .order('created_at',{ascending:false});
+    infoByApp={};
+    (infoRows||[]).forEach(r=>{(infoByApp[r.application_id]=infoByApp[r.application_id]||[]).push(r);});
     renderApplications(applications);
     window.__portalApplications=applications.filter(a=>a.status==='draft');
     document.dispatchEvent(new CustomEvent('portal:applications',{detail:applications.filter(a=>a.status==='draft')}));

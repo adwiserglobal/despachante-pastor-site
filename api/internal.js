@@ -205,7 +205,13 @@ export default async function handler(req, res) {
         .limit(300);
       if (error) throw error;
 
+      const { data: requestRows } = await sb.from('visa_info_requests')
+        .select('application_id,status,created_at').order('created_at', { ascending: false }).limit(1000);
+      const latestRequest = new Map();
+      (requestRows || []).forEach((r) => { if (!latestRequest.has(r.application_id)) latestRequest.set(r.application_id, r.status); });
+
       const rows = (data || []).map((row) => ({
+        info_request: latestRequest.get(row.id) || null,
         id: row.id,
         country: row.country,
         status: row.status,
@@ -231,8 +237,11 @@ export default async function handler(req, res) {
         .eq('id', id)
         .single();
       if (error) throw error;
+      const { data: requests } = await sb.from('visa_info_requests')
+        .select('id,message,requested_by,created_at,status,reply_text,reply_files,replied_at')
+        .eq('application_id', id).order('created_at', { ascending: false });
       await audit(sb, user, 'view_detail', 'visa_applications', id);
-      return json(res, 200, { row: data });
+      return json(res, 200, { row: data, info_requests: requests || [] });
     }
 
     if (action === 'get_visa_document') {
@@ -270,6 +279,49 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true });
     }
 
+    if (action === 'request_info') {
+      const id = String(body.id || '');
+      const message = String(body.message || '').trim();
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
+      if (message.length < 3 || message.length > 4000) {
+        return json(res, 400, { error: 'Escreva o que você precisa do cliente (até 4000 caracteres).' });
+      }
+      const { data: application, error: findError } = await sb.from('visa_applications')
+        .select('id,user_id,submitted_at').eq('id', id).single();
+      if (findError || !application) return json(res, 404, { error: 'Aplicação não encontrada.' });
+      if (!application.submitted_at) {
+        return json(res, 400, { error: 'Esta aplicação ainda é um rascunho. O cliente precisa enviá-la antes.' });
+      }
+      const { error: insertError } = await sb.from('visa_info_requests').insert({
+        application_id: id, user_id: application.user_id, message, requested_by: user.email || null,
+      });
+      if (insertError) throw insertError;
+      const { error: statusError } = await sb.from('visa_applications')
+        .update({ status: 'needs_information', updated_at: new Date().toISOString() }).eq('id', id);
+      if (statusError) throw statusError;
+      await audit(sb, user, 'request_info', 'visa_applications', id);
+      return json(res, 200, { ok: true });
+    }
+
+    if (action === 'get_info_reply_file') {
+      const requestId = String(body.request_id || '');
+      const index = Number(body.index);
+      if (!/^[0-9a-f-]{36}$/i.test(requestId) || !Number.isInteger(index) || index < 0) {
+        return json(res, 400, { error: 'Dados inválidos.' });
+      }
+      const { data: request, error: requestError } = await sb.from('visa_info_requests')
+        .select('id,application_id,user_id,reply_files').eq('id', requestId).single();
+      if (requestError || !request) return json(res, 404, { error: 'Solicitação não encontrada.' });
+      const file = Array.isArray(request.reply_files) ? request.reply_files[index] : null;
+      const path = typeof file === 'string' ? file : file?.path;
+      const prefix = request.user_id + '/' + request.application_id + '/info_reply/';
+      if (typeof path !== 'string' || !path.startsWith(prefix)) return json(res, 404, { error: 'Arquivo não encontrado.' });
+      const { data, error } = await sb.storage.from('visa-documents').createSignedUrl(path, 90);
+      if (error || !data?.signedUrl) return json(res, 404, { error: 'Não foi possível acessar este arquivo.' });
+      await audit(sb, user, 'view_document', 'visa_info_requests', requestId);
+      return json(res, 200, { url: data.signedUrl });
+    }
+
     if (action === 'delete_quote') {
       const id = String(body.id || '');
       if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
@@ -287,7 +339,7 @@ export default async function handler(req, res) {
       if (findError || !application) return json(res, 404, { error: 'Aplicação não encontrada.' });
 
       // Remove os anexos do Storage (campos registrados + qualquer arquivo na pasta da aplicação)
-      const fields = ['passport_file', 'previous_visa_file', 'other_nationality_file'];
+      const fields = ['passport_file', 'previous_visa_file', 'other_nationality_file', 'info_reply'];
       const paths = new Set();
       for (const field of fields) {
         const path = application.form_data?.[field];
