@@ -100,8 +100,13 @@ form.addEventListener('submit', async (event) => {
 
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
-  if (data.session) {
+  if (data.session && window.PastorSession?.isExpired(data.session)) {
+    await supabaseClient.auth.signOut();
+    showMessage('Sua sessão expirou. Entre novamente para continuar.', 'error');
+  } else if (data.session) {
     window.PastorLoader?.show();
     goPortal();
+  } else if (new URLSearchParams(window.location.search).get('expired') === '1') {
+    showMessage('Sua sessão expirou após 40 minutos. Entre novamente para continuar.', 'error');
   }
 })();

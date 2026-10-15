@@ -22,9 +22,9 @@
           <small>Área do cliente</small>
         </a>
         <nav class="portal-sidebar-nav">
-          <a class="is-active" href="./portal.html"><span aria-hidden="true">▤</span> Minhas solicitações</a>
-          <button type="button" data-proxy="#new-self-application"><span aria-hidden="true">＋</span> Nova aplicação</button>
-          <button type="button" data-proxy="#new-family-application"><span aria-hidden="true">⚇</span> Adicionar familiar</button>
+          <a class="is-active" href="./portal.html"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span> Minhas solicitações</a>
+          <button type="button" data-proxy="#new-self-application"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span> Nova aplicação</button>
+          <button type="button" data-proxy="#new-family-application"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M18 14.8c1.9.7 3 2.4 3 5.2"/></svg></span> Adicionar familiar</button>
         </nav>
         <div class="portal-sidebar-foot">
           <button class="logout-button" id="portal-logout" type="button">Sair</button>
@@ -106,6 +106,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4"></script>
     <script src="./supabase-client.js"></script>
+    <script src="./session-guard.js"></script>
     <script src="./loading-screen.js"></script>
     <script src="./portal.js"></script>
     <script src="./portal-shell.js"></script>

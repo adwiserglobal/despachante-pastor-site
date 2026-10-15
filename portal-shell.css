@@ -160,3 +160,12 @@
 .info-status { flex: 1; color: #6d7889; font-size: 12px; }
 .info-send { min-height: 40px; padding: 0 20px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #ecd595, #d3ad5b); color: #04142e; font-weight: 800; font-size: 13px; cursor: pointer; }
 .info-send:disabled, .info-plus:disabled { opacity: .55; cursor: wait; }
+
+/* Ícones da sidebar */
+.portal-sidebar .nav-icon { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: 0 0 auto; }
+.portal-sidebar .nav-icon svg { width: 20px; height: 20px; }
+.portal-sidebar a.is-active .nav-icon { color: var(--gold-300, #ecd9a8); }
+
+/* Aviso de sessão prestes a expirar */
+.session-toast { position: fixed; left: 20px; bottom: 20px; z-index: 90; max-width: 340px; padding: 14px 16px; border: 1px solid #ecd9a8; border-radius: 14px; background: #04142e; color: #fff; font-size: 13px; line-height: 1.5; box-shadow: 0 18px 50px rgba(0,0,0,.3); }
+@media (max-width: 900px) { .session-toast { left: 12px; right: 12px; max-width: none; bottom: 90px; } }

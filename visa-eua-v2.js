@@ -685,6 +685,9 @@ prevButton.addEventListener('click', async () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+// Salva o rascunho antes de a sessão expirar
+window.__beforeSessionExpire = async () => { collectVisibleData(); await saveDraft(false); };
+
 document.querySelector('#logout-button').addEventListener('click', async () => {
   collectVisibleData();
   await saveDraft(false);
