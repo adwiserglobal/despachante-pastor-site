@@ -62,9 +62,9 @@
 /* Rodapé: crédito centralizado */
 .footer-bottom { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
 .footer-bottom small:last-child { justify-self: end; text-align: right; }
-.dev-credit { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,.4); font-size: 9px; transition: opacity .2s ease; }
+.dev-credit { display: inline-flex; align-items: center; gap: 10px; color: rgba(255,255,255,.5); font-size: 10px; transition: opacity .2s ease; }
 .dev-credit span { line-height: 1; }
-.dev-credit img { height: 22px; width: auto; display: block; opacity: .85; transition: opacity .2s ease; }
+.dev-credit img { height: 34px; width: auto; display: block; opacity: .85; transition: opacity .2s ease; }
 .dev-credit:hover img { opacity: 1; }
 @media (max-width: 760px) {
   .footer-bottom { grid-template-columns: 1fr; justify-items: center; text-align: center; padding-block: 16px; gap: 10px; }
