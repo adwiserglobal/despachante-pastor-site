@@ -140,7 +140,7 @@ if (isHomePage) {
             <label class="quote-field"><select name="vehicle_id_type" id="quote-vehicle-id-type" aria-label="Tipo de identificação"><option value="placa">Placa</option><option value="renavam">RENAVAM</option></select></label>
             <label class="quote-field"><input name="vehicle_plate" type="text" id="quote-vehicle-identifier" placeholder="Placa do veículo (opcional)" autocomplete="off" maxlength="11"></label>
           </div>
-          <button class="button button-gold quote-submit" type="submit">Solicitar orçamento <span aria-hidden="true">↗</span></button>
+          <button class="button button-gold quote-submit" type="submit">Solicitar orçamento</button>
           <div class="quote-status" id="quote-status" role="status" aria-live="polite"></div>
           <div class="quote-note">Ao clicar em solicitar orçamento, você concorda com a <a href="./privacidade.html">política de privacidade</a>.</div>
         </form>
@@ -207,7 +207,7 @@ if (isHomePage) {
         quoteStatus.textContent = 'Não foi possível enviar agora. Tente novamente em alguns instantes.';
       } finally {
         button.disabled = false;
-        button.innerHTML = 'Solicitar orçamento <span aria-hidden="true">↗</span>';
+        button.textContent = 'Solicitar orçamento';
       }
     });
   }
@@ -287,7 +287,7 @@ if (isHomePage) {
             <h2>Venha até o Despachante Pastor.</h2>
             <p>Rua Cesário Mota, 245<br>Santo André, SP · CEP 09010-100</p>
           </div>
-          <a class="button button-gold" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&destination=Rua+Ces%C3%A1rio+Mota%2C+245%2C+Santo+Andr%C3%A9%2C+SP%2C+09010-100%2C+Brasil">Como chegar <span aria-hidden="true">↗</span></a>
+          <a class="button button-gold" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&destination=Rua+Ces%C3%A1rio+Mota%2C+245%2C+Santo+Andr%C3%A9%2C+SP%2C+09010-100%2C+Brasil">Como chegar</a>
         </div>
         <div class="map-shell">
           <iframe
