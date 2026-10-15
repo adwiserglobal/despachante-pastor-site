@@ -52,3 +52,9 @@
 .desktop-nav a, .desktop-cta { white-space: nowrap; }
 .nav-wrap { gap: 18px; }
 @media (max-width: 1240px) { .desktop-nav { gap: 12px; } .desktop-nav a { font-size: 12px; } }
+
+/* Rodapé: logo branco sem caixa e Instagram com ícone branco */
+.footer-brand .brand-mark { width: 76px; height: 76px; padding: 0; overflow: visible; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.footer-links .social-instagram { color: #fff; gap: 9px; }
+.footer-links .social-instagram svg { width: 20px; height: 20px; flex: 0 0 auto; color: #fff; }
+.footer-links .social-instagram:hover { color: var(--gold-300, #ecd9a8); }
