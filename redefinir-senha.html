@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071b3a" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Nova senha | Despachante Pastor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/briefing-updates.css" />
+    <link rel="stylesheet" href="/portal.css" />
+    <link rel="stylesheet" href="/auth-extras.css" />
+  </head>
+  <body class="auth-page">
+    <main class="auth-shell">
+      <section class="auth-brand-panel">
+        <a class="auth-brand" href="/index.html" aria-label="Voltar para o site">
+          <span class="brand-mark"><img src="/assets/logo-white.png" alt="Logo Despachante Pastor" /></span>
+        </a>
+        <div class="auth-brand-copy">
+          <span class="kicker">Área segura do cliente</span>
+          <h1>Crie uma nova <span>senha.</span></h1>
+          <p>Escolha uma senha nova para voltar a acessar suas solicitações.</p>
+        </div>
+        <div class="auth-brand-footer">Acesso protegido e dados vinculados à sua conta.</div>
+      </section>
+
+      <section class="auth-form-panel">
+        <div class="auth-card">
+          <a class="auth-back" href="/login.html">← Voltar para o login</a>
+          <h2>Nova senha</h2>
+          <p id="reset-subtitle">Validando seu link de recuperação…</p>
+          <form id="reset-form" class="auth-form" hidden>
+            <div id="auth-message" class="auth-message" role="status" aria-live="polite"></div>
+            <div class="field-group">
+              <label for="new-password">Nova senha</label>
+              <input id="new-password" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo de 6 caracteres" required />
+            </div>
+            <div class="field-group">
+              <label for="confirm-password">Confirmar nova senha</label>
+              <input id="confirm-password" type="password" autocomplete="new-password" minlength="6" placeholder="Repita a senha" required />
+            </div>
+            <button id="reset-submit" class="button button-gold button-large auth-submit" type="submit">Salvar nova senha</button>
+          </form>
+          <div id="reset-invalid" class="auth-message show error" hidden>Este link expirou ou já foi usado. <a href="/login.html">Volte ao login</a> e peça um novo em “Esqueci minha senha”.</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4"></script>
+    <script src="/supabase-client.js"></script>
+    <script src="/redefinir-senha.js"></script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+[hidden] { display: none !important; }
+.auth-brand .brand-mark { width: 92px; height: 92px; padding: 0; overflow: visible; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.auth-forgot-row { display: flex; justify-content: flex-end; margin-top: -6px; }
+.auth-link { padding: 4px 0; border: 0; background: none; color: #8c6725; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.auth-link:hover { color: #0b1d38; }

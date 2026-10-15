@@ -30,7 +30,7 @@
       ]
     },
     {
-      "source": "/(portal|login|visa-eua|area-do-cliente|vistos/estados-unidos)(.html)?",
+      "source": "/(portal|login|redefinir-senha|visa-eua|area-do-cliente|vistos/estados-unidos)(.html)?",
       "headers": [
         {
           "key": "Cache-Control",
