@@ -58,3 +58,15 @@
 .footer-links .social-instagram { color: #fff; gap: 9px; }
 .footer-links .social-instagram svg { width: 20px; height: 20px; flex: 0 0 auto; color: #fff; }
 .footer-links .social-instagram:hover { color: var(--gold-300, #ecd9a8); }
+
+/* Rodapé: crédito centralizado */
+.footer-bottom { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
+.footer-bottom small:last-child { justify-self: end; text-align: right; }
+.dev-credit { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,.4); font-size: 9px; transition: opacity .2s ease; }
+.dev-credit span { line-height: 1; }
+.dev-credit img { height: 22px; width: auto; display: block; opacity: .85; transition: opacity .2s ease; }
+.dev-credit:hover img { opacity: 1; }
+@media (max-width: 760px) {
+  .footer-bottom { grid-template-columns: 1fr; justify-items: center; text-align: center; padding-block: 16px; gap: 10px; }
+  .footer-bottom small:last-child { justify-self: center; text-align: center; }
+}
