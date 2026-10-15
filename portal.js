@@ -297,6 +297,22 @@ function createTrackingCard(application) {
   return card;
 }
 
+// Só é possível ter um questionário em andamento por vez: bloqueia novos até o envio
+function setNewApplicationLock(locked) {
+  const reason = 'Envie o questionário em andamento para liberar.';
+  document.querySelectorAll('#new-self-application, #new-family-application, [data-proxy]').forEach((button) => {
+    button.disabled = locked;
+    button.classList.toggle('is-locked', locked);
+    button.setAttribute('aria-disabled', String(locked));
+    if (locked) button.title = reason; else button.removeAttribute('title');
+  });
+  const note = document.querySelector('.portal-family-note');
+  if (note) {
+    note.dataset.base = note.dataset.base || note.textContent;
+    note.textContent = locked ? note.dataset.base + ' ' + reason : note.dataset.base;
+  }
+}
+
 function renderApplications(applications) {
   applicationList.replaceChildren();
   const drafts = applications.filter(a => a.status === 'draft');
@@ -308,6 +324,7 @@ function renderApplications(applications) {
     trackingRoot.replaceChildren(...tracked.map(createTrackingCard));
     trackingSection.hidden = tracked.length === 0;
   }
+  setNewApplicationLock(drafts.length > 0);
   if (!drafts.length) {
     const empty = document.createElement('div');
     empty.className = 'portal-empty';
@@ -349,10 +366,11 @@ function renderDocuments(applications) {
 }
 
 document.querySelector('#new-self-application').addEventListener('click', () => {
+  if (document.querySelector('#new-self-application').disabled) return;
   window.PastorLoader?.show();
   window.location.assign('/vistos/estados-unidos?new=1&relationship=Titular');
 });
-document.querySelector('#new-family-application').addEventListener('click', () => familyDialog.showModal());
+document.querySelector('#new-family-application').addEventListener('click', () => { if (!document.querySelector('#new-family-application').disabled) familyDialog.showModal(); });
 document.querySelector('#family-modal-close').addEventListener('click', () => familyDialog.close());
 familyDialog.addEventListener('click',event => {if(event.target===familyDialog)familyDialog.close();});
 familyForm.addEventListener('submit',event => {
@@ -399,7 +417,7 @@ logoutButton.addEventListener('click', async () => {
     window.__portalApplications=applications.filter(a=>a.status==='draft');
     document.dispatchEvent(new CustomEvent('portal:applications',{detail:applications.filter(a=>a.status==='draft')}));
     if (new URLSearchParams(location.search).get('add_family') === '1') {
-      familyDialog.showModal();
+      if (!applications.some(a => a.status === 'draft')) familyDialog.showModal();
       history.replaceState(null,'','/portal.html');
     }
     // Os anexos de questionários enviados não ficam acessíveis ao cliente.

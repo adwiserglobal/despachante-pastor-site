@@ -169,3 +169,8 @@
 /* Aviso de sessão prestes a expirar */
 .session-toast { position: fixed; left: 20px; bottom: 20px; z-index: 90; max-width: 340px; padding: 14px 16px; border: 1px solid #ecd9a8; border-radius: 14px; background: #04142e; color: #fff; font-size: 13px; line-height: 1.5; box-shadow: 0 18px 50px rgba(0,0,0,.3); }
 @media (max-width: 900px) { .session-toast { left: 12px; right: 12px; max-width: none; bottom: 90px; } }
+
+/* Botões de novo questionário bloqueados enquanto há um em andamento */
+.button.is-locked, .button.is-locked:hover { background: #e6e9ee !important; color: #9aa4b2 !important; box-shadow: none !important; transform: none !important; cursor: not-allowed; }
+.portal-sidebar button.is-locked, .portal-sidebar button.is-locked:hover { opacity: .4; cursor: not-allowed; background: transparent; transform: none; color: rgba(255,255,255,.74); }
+.button.is-locked::after { display: none !important; }
