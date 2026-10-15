@@ -138,6 +138,8 @@ function createTrackingCard(application) {
   const when = application.updated_at ? new Date(application.updated_at).toLocaleDateString('pt-BR') : '';
   note.textContent = needsInfo
     ? 'Nossa equipe precisa de informações adicionais. Fique atento ao contato pelo WhatsApp.'
+    : application.status === 'submitted'
+      ? 'Questionário recebido. Nossa equipe vai iniciar a análise em breve.'
     : completed
       ? 'Atendimento concluído.' + (when ? ' Atualizado em ' + when + '.' : '')
       : 'Acompanhamento pelo WhatsApp.' + (when ? ' Última atualização em ' + when + '.' : '');
@@ -149,8 +151,8 @@ function createTrackingCard(application) {
 function renderApplications(applications) {
   applicationList.replaceChildren();
   const drafts = applications.filter(a => a.status === 'draft');
-  // Só aparece depois que o questionário foi enviado (submitted_at) e a equipe alterou o status
-  const tracked = applications.filter(a => a.submitted_at && ['in_review','needs_information','completed'].includes(a.status));
+  // Só aparece depois que o cliente enviou o questionário (submitted_at); rascunhos nunca entram aqui
+  const tracked = applications.filter(a => a.submitted_at && ['submitted','in_review','needs_information','completed'].includes(a.status));
   const trackingRoot = document.querySelector('#portal-tracking');
   const trackingSection = document.querySelector('#portal-tracking-section');
   if (trackingRoot) {
