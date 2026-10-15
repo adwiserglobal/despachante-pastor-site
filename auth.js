@@ -41,6 +41,7 @@ function setMode(nextMode) {
   passwordInput.required = !forgot;
   forgotRow.hidden = mode !== 'login';
   backButton.hidden = !forgot;
+  document.querySelector('#back-site').hidden = forgot;
   passwordInput.autocomplete = signup ? 'new-password' : 'current-password';
   authTitle.textContent = forgot ? 'Recupere sua senha' : signup ? 'Crie sua conta' : 'Entre na sua conta';
   authSubtitle.textContent = forgot

@@ -6,3 +6,5 @@
 
 .auth-pill-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 22px; padding: 9px 16px; border: 1px solid #dfe5ec; border-radius: 999px; background: #fff; color: #0b1d38; font: inherit; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
 .auth-pill-back:hover { transform: translateX(-3px); border-color: #d3ad5b; box-shadow: 0 8px 20px rgba(11,29,56,.08); }
+
+#back-site[hidden], #back-login[hidden] { display: none !important; }
