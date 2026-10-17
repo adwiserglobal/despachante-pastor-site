@@ -128,14 +128,14 @@ const steps = [
       { name: 'previous_job_start', label: 'Data de admissão (DD/MM/AAAA)', date: true, required: true, showIf: { previously_employed: 'sim' } },
       { name: 'previous_job_end', label: 'Data de desligamento (DD/MM/AAAA)', date: true, required: true, showIf: { previously_employed: 'sim' } },
       { name: 'education_history', label: 'Cursou ou está cursando ensino médio ou superior?', type: 'yesno' },
-      { name: 'institution_name', label: 'Nome da instituição' },
-      { name: 'institution_address', label: 'Endereço completo com CEP' },
-      { name: 'course_name', label: 'Nome do curso' },
-      { name: 'course_start', label: 'Data de início do curso (DD/MM/AAAA)' },
-      { name: 'course_end', label: 'Data de término do curso (DD/MM/AAAA)' },
+      { name: 'institution_name', label: 'Nome da instituição', showIf: { education_history: 'sim' } },
+      { name: 'institution_address', label: 'Endereço completo com CEP', showIf: { education_history: 'sim' } },
+      { name: 'course_name', label: 'Nome do curso', showIf: { education_history: 'sim' } },
+      { name: 'course_start', label: 'Data de início do curso (DD/MM/AAAA)', showIf: { education_history: 'sim' } },
+      { name: 'course_end', label: 'Data de término do curso (DD/MM/AAAA)', showIf: { education_history: 'sim' } },
       { name: 'languages', label: 'Informe os idiomas que você fala' },
       { name: 'traveled_last_5_years', label: 'Você viajou para algum país nos últimos 5 anos?', type: 'yesno' },
-      { name: 'countries_visited', label: 'Informe os países que visitou' },
+      { name: 'countries_visited', label: 'Informe os países que visitou', showIf: { traveled_last_5_years: 'sim' } },
       { name: 'organizations', label: 'Você já pertenceu a alguma organização profissional, social ou de caridade?', type: 'yesno' },
     ],
   },
@@ -492,6 +492,17 @@ function scheduleSave() {
   state.saveTimer = window.setTimeout(() => saveDraft(), 700);
 }
 
+// Remove respostas de campos que ficaram ocultos (ex.: curso, depois de responder "Não")
+function pruneHiddenFields() {
+  for (let pass = 0; pass < 3; pass++) {
+    steps.forEach((step) => step.fields.forEach((field) => {
+      if (field.showIf && !isFieldVisible(field) && field.type !== 'file' && state.data[field.name] !== undefined && state.data[field.name] !== '' && state.data[field.name] !== false) {
+        delete state.data[field.name];
+      }
+    }));
+  }
+}
+
 async function saveDraft(showState = true) {
   if (!state.application) return false;
   if (state.saving) {
@@ -499,6 +510,7 @@ async function saveDraft(showState = true) {
     return saveDraft(showState);
   }
   collectVisibleData();
+  pruneHiddenFields();
   state.saving = true;
   if (showState) setSaveState('saving', 'Salvando...');
 
@@ -578,6 +590,7 @@ async function ensureApplication() {
 
 async function submitApplication() {
   collectVisibleData();
+  pruneHiddenFields();
   if (state.data.declaration !== true) {
     await window.PastorLoader?.hide?.(200);
     alert('Você precisa aceitar a declaração antes de enviar.');
