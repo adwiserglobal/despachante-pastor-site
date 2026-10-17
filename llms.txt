@@ -1,0 +1,25 @@
+# Despachante Pastor
+
+> Despachante e assessoria documental em Santo André (SP). Atende serviços veiculares, vistos consulares e passaportes, certificado digital e outras solicitações documentais, com atendimento personalizado e acompanhamento do processo.
+
+## Fatos
+- Nome: Despachante Pastor
+- Endereço: Rua Cesário Mota, 245, Santo André, SP, CEP 09010-100, Brasil
+- Telefone e WhatsApp: (11) 4438-2633 (+55 11 4438-2633)
+- Instagram: https://www.instagram.com/desp.pastor/
+- Atendimento sujeito ao horário comercial e à disponibilidade da equipe
+- Idioma: português do Brasil
+
+## Serviços
+- Serviços veiculares: transferência, licenciamento, liberação de pátio e demais demandas veiculares
+- Vistos consulares e passaportes: triagem documental e orientação para Estados Unidos, México, China, Arábia Saudita e outros destinos sob consulta
+- Certificado digital e outras solicitações documentais
+
+## Páginas
+- [Início](https://despachantepastor.vercel.app/): serviços, diferenciais, como funciona, perguntas frequentes, contato e localização
+- [Vistos](https://despachantepastor.vercel.app/vistos): destinos atendidos e como solicitar assessoria
+- [Política de privacidade](https://despachantepastor.vercel.app/privacidade)
+
+## Observações
+- A assessoria presta suporte documental e de preparação. Requisitos, prazos, taxas, elegibilidade e a decisão final sobre vistos são definidos pelas autoridades de cada país.
+- A Área do cliente (login) é privada e não deve ser indexada.

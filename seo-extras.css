@@ -1,0 +1,14 @@
+/* Perguntas frequentes e endereço do rodapé */
+.faq-section { background: #f7f9fc; }
+.faq-wrap { max-width: 860px; }
+.faq-list { display: grid; gap: 12px; margin-top: 8px; }
+.faq-item { border: 1px solid #e0e5eb; border-radius: 18px; background: #fff; transition: border-color .25s ease, box-shadow .25s ease; }
+.faq-item[open] { border-color: #ecd9a8; box-shadow: 0 14px 36px rgba(11,29,56,.06); }
+.faq-item summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; cursor: pointer; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary h3 { margin: 0; font-family: "Manrope", sans-serif; font-size: 17px; letter-spacing: -.01em; color: #0b1d38; }
+.faq-item summary::after { content: "+"; flex: 0 0 auto; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #f3ead2; color: #8c6725; font-size: 18px; font-weight: 700; transition: transform .25s ease; }
+.faq-item[open] summary::after { transform: rotate(45deg); }
+.faq-item p { margin: 0; padding: 0 22px 20px; color: #4a5b72; font-size: 15px; line-height: 1.7; }
+.footer-address { font-style: normal; color: rgba(255,255,255,.6); font-size: 11px; font-weight: 600; }
+@media (max-width: 640px) { .faq-item summary { padding: 16px 18px; } .faq-item summary h3 { font-size: 15px; } .faq-item p { padding: 0 18px 18px; } }
