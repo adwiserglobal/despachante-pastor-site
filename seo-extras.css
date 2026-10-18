@@ -12,3 +12,7 @@
 .faq-item p { margin: 0; padding: 0 22px 20px; color: #4a5b72; font-size: 15px; line-height: 1.7; }
 .footer-address { font-style: normal; color: rgba(255,255,255,.6); font-size: 11px; font-weight: 600; }
 @media (max-width: 640px) { .faq-item summary { padding: 16px 18px; } .faq-item summary h3 { font-size: 15px; } .faq-item p { padding: 0 18px 18px; } }
+
+/* Selo da seção de credibilidade: logo branco, sem caixa clara */
+.credibility-mark { padding: 0; border: 0; border-radius: 0; background: none; }
+.credibility-mark img { width: 100%; height: 100%; object-fit: contain; display: block; }
