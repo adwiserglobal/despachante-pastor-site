@@ -16,9 +16,9 @@
 - Certificado digital e outras solicitações documentais
 
 ## Páginas
-- [Início](https://despachantepastor.vercel.app/): serviços, diferenciais, como funciona, perguntas frequentes, contato e localização
-- [Vistos](https://despachantepastor.vercel.app/vistos): destinos atendidos e como solicitar assessoria
-- [Política de privacidade](https://despachantepastor.vercel.app/privacidade)
+- [Início](https://www.despachantepastor.com.br/): serviços, diferenciais, como funciona, perguntas frequentes, contato e localização
+- [Vistos](https://www.despachantepastor.com.br/vistos): destinos atendidos e como solicitar assessoria
+- [Política de privacidade](https://www.despachantepastor.com.br/privacidade)
 
 ## Observações
 - A assessoria presta suporte documental e de preparação. Requisitos, prazos, taxas, elegibilidade e a decisão final sobre vistos são definidos pelas autoridades de cada país.

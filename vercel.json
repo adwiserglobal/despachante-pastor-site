@@ -125,5 +125,18 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/((?!logo_animado\\.gif).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "despachantepastor.vercel.app"
+        }
+      ],
+      "destination": "https://www.despachantepastor.com.br/$1",
+      "permanent": true
+    }
   ]
 }

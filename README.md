@@ -41,7 +41,7 @@ O projeto é estático e pode ser publicado diretamente na Vercel, Netlify, Clou
 
 ## SEO e GEO
 
-- **Domínio:** as URLs canônicas, `sitemap.xml`, `robots.txt`, `llms.txt` e os dados estruturados (JSON-LD) usam `https://despachantepastor.vercel.app`. Ao publicar em um domínio próprio, troque essa URL em `index.html`, `vistos.html`, `privacidade.html`, `sitemap.xml`, `robots.txt` e `llms.txt`.
+- **Domínio:** as URLs canônicas, `sitemap.xml`, `robots.txt`, `llms.txt` e os dados estruturados (JSON-LD) usam `https://www.despachantepastor.com.br`. Se o domínio mudar, troque essa URL em `index.html`, `vistos.html`, `privacidade.html`, `sitemap.xml`, `robots.txt` e `llms.txt`.
 - **Dados estruturados:** `LocalBusiness`/`ProfessionalService` e `FAQPage` na home; `Service` e `BreadcrumbList` em `/vistos`. Mantenha endereço, telefone e perguntas frequentes sempre iguais ao conteúdo visível da página.
 - **Páginas privadas** (`/login`, `/portal`, formulário de visto, `/interno`, `/redefinir-senha`) têm `noindex` e estão bloqueadas no `robots.txt`.
 - **Google Business Profile:** mantenha nome, endereço, telefone e site idênticos aos do site (NAP) para fortalecer a busca local.
