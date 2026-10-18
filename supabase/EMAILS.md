@@ -20,3 +20,9 @@ A função só aceita chamadas com o cabeçalho `x-webhook-secret` igual ao segr
 - Segredo da função: `RESEND_API_KEY` (Supabase → Edge Functions → Secrets). Use uma chave do Resend com permissão "Sending access" para o domínio despachantepastor.com.br.
 - Opcionais: `RESEND_FROM` (padrão `Despachante Pastor <atendimento@despachantepastor.com.br>`) e `RESEND_REPLY_TO` (padrão desp.pastor@gmail.com).
 - Domínio no Resend: DKIM e SPF verificados; o registro MX de recebimento não é necessário para enviar.
+
+## Kanban de contatos (/interno)
+- Tabela `lead_stages` (colunas do quadro: nome, cor, posição) e, em `quote_requests`, os campos `stage_id`, `position` e `notes`.
+- Gatilho `assign_new_lead_stage`: todo lead novo entra na primeira coluna, no topo, e ignora `stage_id`/`position`/`notes` enviados pelo formulário público.
+- O e-mail de "novo contato" continua disparado pelo gatilho `email_on_lead_created_trigger`.
+- Ações da API interna: `create_stage`, `update_stage`, `reorder_stages`, `delete_stage` (move os cartões para a primeira coluna restante), `move_quote`, `update_quote_notes`, `delete_quote`.

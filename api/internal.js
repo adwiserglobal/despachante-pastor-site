@@ -177,12 +177,15 @@ export default async function handler(req, res) {
     if (action === 'list_quotes') {
       const { data, error } = await sb
         .from('quote_requests')
-        .select('id,created_at,name,email,phone,vehicle_plate,service,status')
-        .order('created_at', { ascending: false })
-        .limit(300);
+        .select('id,created_at,name,email,phone,vehicle_plate,service,status,stage_id,position,notes')
+        .order('position', { ascending: true })
+        .limit(1000);
       if (error) throw error;
+      const { data: stages, error: stagesError } = await sb
+        .from('lead_stages').select('id,name,color,position').order('position', { ascending: true });
+      if (stagesError) throw stagesError;
       await audit(sb, user, 'list', 'quote_requests');
-      return json(res, 200, { rows: data || [] });
+      return json(res, 200, { rows: data || [], stages: stages || [] });
     }
 
     if (action === 'update_quote_status') {
@@ -320,6 +323,90 @@ export default async function handler(req, res) {
       if (error || !data?.signedUrl) return json(res, 404, { error: 'Não foi possível acessar este arquivo.' });
       await audit(sb, user, 'view_document', 'visa_info_requests', requestId);
       return json(res, 200, { url: data.signedUrl });
+    }
+
+    // ----- Kanban de contatos -----
+    if (action === 'create_stage') {
+      const name = String(body.name || '').trim().slice(0, 40);
+      const color = /^#[0-9a-fA-F]{6}$/.test(String(body.color || '')) ? String(body.color) : '#d3ad5b';
+      if (!name) return json(res, 400, { error: 'Informe o nome da coluna.' });
+      const { data: last } = await sb.from('lead_stages').select('position').order('position', { ascending: false }).limit(1);
+      const position = (last?.[0]?.position ?? -1) + 1;
+      const { data, error } = await sb.from('lead_stages').insert({ name, color, position }).select('id,name,color,position').single();
+      if (error) throw error;
+      await audit(sb, user, 'create_stage', 'lead_stages', data.id);
+      return json(res, 200, { stage: data });
+    }
+
+    if (action === 'update_stage') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
+      const patch = {};
+      if (body.name !== undefined) {
+        const name = String(body.name).trim().slice(0, 40);
+        if (!name) return json(res, 400, { error: 'O nome da coluna não pode ficar vazio.' });
+        patch.name = name;
+      }
+      if (body.color !== undefined) {
+        if (!/^#[0-9a-fA-F]{6}$/.test(String(body.color))) return json(res, 400, { error: 'Cor inválida.' });
+        patch.color = String(body.color);
+      }
+      const { error } = await sb.from('lead_stages').update(patch).eq('id', id);
+      if (error) throw error;
+      await audit(sb, user, 'update_stage', 'lead_stages', id);
+      return json(res, 200, { ok: true });
+    }
+
+    if (action === 'reorder_stages') {
+      const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
+      if (!ids.length || ids.some((id) => !/^[0-9a-f-]{36}$/i.test(id))) return json(res, 400, { error: 'Dados inválidos.' });
+      for (let i = 0; i < ids.length; i++) {
+        const { error } = await sb.from('lead_stages').update({ position: i }).eq('id', ids[i]);
+        if (error) throw error;
+      }
+      await audit(sb, user, 'reorder_stages', 'lead_stages');
+      return json(res, 200, { ok: true });
+    }
+
+    if (action === 'delete_stage') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
+      const { data: stages, error: listError } = await sb.from('lead_stages').select('id,position').order('position', { ascending: true });
+      if (listError) throw listError;
+      if ((stages || []).length <= 1) return json(res, 400, { error: 'É preciso manter ao menos uma coluna.' });
+      const target = stages.find((s) => s.id !== id);
+      // Os cartões da coluna removida vão para a primeira coluna restante
+      const { error: moveError } = await sb.from('quote_requests').update({ stage_id: target.id }).eq('stage_id', id);
+      if (moveError) throw moveError;
+      const { error } = await sb.from('lead_stages').delete().eq('id', id);
+      if (error) throw error;
+      await audit(sb, user, 'delete_stage', 'lead_stages', id);
+      return json(res, 200, { ok: true, moved_to: target.id });
+    }
+
+    if (action === 'move_quote') {
+      const id = String(body.id || '');
+      const stageId = String(body.stage_id || '');
+      const position = Number(body.position);
+      if (!/^[0-9a-f-]{36}$/i.test(id) || !/^[0-9a-f-]{36}$/i.test(stageId) || !Number.isFinite(position)) {
+        return json(res, 400, { error: 'Dados inválidos.' });
+      }
+      const { data: stage } = await sb.from('lead_stages').select('id').eq('id', stageId).maybeSingle();
+      if (!stage) return json(res, 404, { error: 'Coluna não encontrada.' });
+      const { error } = await sb.from('quote_requests').update({ stage_id: stageId, position }).eq('id', id);
+      if (error) throw error;
+      await audit(sb, user, 'move_quote', 'quote_requests', id);
+      return json(res, 200, { ok: true });
+    }
+
+    if (action === 'update_quote_notes') {
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json(res, 400, { error: 'ID inválido.' });
+      const notes = String(body.notes ?? '').slice(0, 4000);
+      const { error } = await sb.from('quote_requests').update({ notes: notes || null }).eq('id', id);
+      if (error) throw error;
+      await audit(sb, user, 'update_notes', 'quote_requests', id);
+      return json(res, 200, { ok: true });
     }
 
     if (action === 'delete_quote') {

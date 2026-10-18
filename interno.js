@@ -9,6 +9,8 @@ import {
   signOut,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
+import { createKanban } from './interno-kanban.js';
+
 const firebaseConfig = {
   apiKey: 'AIzaSyD05n9UT7vPVswl699-DXDJ-YZhiqSqVEU',
   authDomain: 'despachante-pastor-4e8fa.firebaseapp.com',
@@ -41,8 +43,7 @@ const navButtons = [...document.querySelectorAll('.internal-nav-item')];
 const contactsView = document.querySelector('#contacts-view');
 const visasView = document.querySelector('#visas-view');
 const viewTitle = document.querySelector('#view-title');
-const contactsBody = document.querySelector('#contacts-table-body');
-const contactsEmpty = document.querySelector('#contacts-empty');
+const kanbanRoot = document.querySelector('#kanban-root');
 const contactStats = document.querySelector('#contact-stats');
 const visasBody = document.querySelector('#visas-table-body');
 const visasEmpty = document.querySelector('#visas-empty');
@@ -192,6 +193,14 @@ logoutButton.addEventListener('click', async () => {
 
 refreshButton.addEventListener('click', loadAllData);
 
+// Atualiza o quadro automaticamente a cada minuto, sem interromper arrastes ou janelas abertas
+setInterval(() => {
+  if (document.hidden || !currentUser || loadingData || (kanban && kanban.busy)) return;
+  loadAllData();
+}, 60000);
+
+document.addEventListener('internal:open-card', (event) => kanban?.openCard(event.detail));
+
 navButtons.forEach((button) => {
   button.addEventListener('click', () => {
     currentView = button.dataset.view;
@@ -306,47 +315,23 @@ function buildDeleteButton(what, onConfirm) {
   return button;
 }
 
+let kanban = null;
+
 function renderContacts() {
-  contactsBody.replaceChildren();
-  contactsEmpty.hidden = contactRows.length > 0;
+  const stages = kanban?.getStages?.() || [];
+  const firstStageId = stages[0]?.id;
   const today = new Date().toISOString().slice(0, 10);
   renderStats(contactStats, [
     ['Total de contatos', contactRows.length],
-    ['Novos', contactRows.filter((row) => row.status === 'new').length],
+    ['Na primeira coluna', contactRows.filter((row) => row.stage_id === firstStageId).length],
     ['Recebidos hoje', contactRows.filter((row) => String(row.created_at || '').slice(0, 10) === today).length],
   ]);
+}
 
-  contactRows.forEach((row) => {
-    const tr = document.createElement('tr');
-    tr.appendChild(createText('td', fmtDate(row.created_at)));
-
-    const client = document.createElement('td');
-    client.append(createText('strong', row.name), createText('small', row.email));
-    tr.appendChild(client);
-
-    const contact = document.createElement('td');
-    contact.append(createText('strong', row.phone), createText('small', row.email));
-    tr.appendChild(contact);
-
-    tr.appendChild(createText('td', readableService(row.service)));
-    tr.appendChild(createText('td', row.vehicle_plate || '—'));
-
-    const statusCell = document.createElement('td');
-    statusCell.appendChild(buildStatusSelect(row.status, ['new', 'contacted', 'in_progress', 'won', 'closed'], async (status) => {
-      await api('update_quote_status', { id: row.id, status });
-      row.status = status;
-      renderContacts();
-    }));
-    tr.appendChild(statusCell);
-    const contactAction = document.createElement('td');
-    contactAction.appendChild(buildDeleteButton(`o contato de ${row.name || 'este cliente'}`, async () => {
-      await api('delete_quote', { id: row.id });
-      contactRows = contactRows.filter((item) => item.id !== row.id);
-      renderContacts();
-    }));
-    tr.appendChild(contactAction);
-    contactsBody.appendChild(tr);
-  });
+function publishData() {
+  document.dispatchEvent(new CustomEvent('internal:data', {
+    detail: { contacts: kanban?.getCards?.() || contactRows, stages: kanban?.getStages?.() || [], visas: visaRows },
+  }));
 }
 
 function renderVisas() {
@@ -527,8 +512,15 @@ async function loadAllData() {
     ]);
     contactRows = quotes.rows || [];
     visaRows = visas.rows || [];
-    renderContacts();
+    if (!kanban) {
+      kanban = createKanban({
+        root: kanbanRoot, api, readableService, fmtDate,
+        onChange: ({ cards }) => { contactRows = cards; renderContacts(); publishData(); },
+      });
+    }
+    kanban.set(contactRows, quotes.stages || []);
     renderVisas();
+    publishData();
   } catch (error) {
     console.error(error);
     if (!auth.currentUser) {
