@@ -1,0 +1,44 @@
+/* Ajustes de responsividade (celular e tablet) */
+@media (max-width: 980px) {
+  .hero { min-height: 0; }
+  .hero-layout { min-height: 0; padding-top: 132px; padding-bottom: 48px; }
+  .hero-copy, .hero-visual, .quote-panel { min-width: 0; }
+  .quote-panel { max-width: 100%; margin-inline: 0; }
+}
+
+@media (max-width: 640px) {
+  .container { width: min(1180px, calc(100% - 32px)); }
+  .nav-wrap { height: 72px; gap: 12px; }
+  .brand-mark, .topbar .brand-mark { width: 52px; height: 52px; }
+  .hero-layout { padding-top: 110px; padding-bottom: 40px; gap: 28px; }
+  .hero h1 { font-size: clamp(40px, 12vw, 54px); }
+  .hero-text { font-size: 16px; line-height: 1.65; }
+  .hero-actions { margin-top: 26px; }
+  .quote-panel { padding: 22px 18px; border-radius: 22px; }
+  .quote-panel h2 { font-size: 24px; }
+  .section { padding: 72px 0; }
+  .services { padding-top: 92px; }
+  .section-heading h2, .split-copy h2, .contact-copy h2 { font-size: clamp(30px, 9vw, 38px); line-height: 1.1; }
+  .service-card { min-height: 0; padding: 26px 22px; }
+  .benefit, .process-step { padding-inline: 0; }
+  .credibility-card { padding: 28px 22px; gap: 20px; text-align: left; }
+  .faq-section { padding-block: 64px; }
+  .contact-card { padding: 26px 20px; }
+  .contact-action { padding: 16px; }
+  .footer-main { flex-direction: column; align-items: center; text-align: center; padding-block: 32px; gap: 22px; }
+  .footer-links { justify-content: center; gap: 12px 20px; }
+  .footer-bottom { padding-block: 20px; }
+  .map-shell iframe { height: 320px; }
+  .location-heading { gap: 18px; }
+}
+
+@media (max-width: 380px) {
+  .hero h1 { font-size: 38px; }
+  .button-large { padding-inline: 20px; }
+  .trust-row span { font-size: 12px; }
+}
+
+/* Evita que botões de toque fiquem pequenos demais */
+@media (hover: none) and (pointer: coarse) {
+  .button, .menu-toggle, .quote-field input, .quote-field select { min-height: 48px; }
+}

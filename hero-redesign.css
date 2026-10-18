@@ -151,7 +151,7 @@
 }
 
 @media (max-width: 980px) {
-  .hero-layout { gap: 36px; }
+  .hero-layout { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .hero-copy { padding-left: 22px; }
 }
 
