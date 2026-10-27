@@ -26,7 +26,7 @@ const row = (label: string, value: unknown) =>
 const pill = (text: string, bg: string, color: string) =>
   `<span style="display:inline-block;padding:7px 14px;border-radius:999px;background:${bg};color:${color};font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:${FONT}">${esc(text)}</span>`;
 
-function layout(o: { preheader: string; kicker: string; title: string; inner: string; cta?: { label: string; href: string }; client?: boolean }) {
+function layout(o: { preheader: string; kicker: string; title: string; inner: string; cta?: { label: string; href: string }; client?: boolean; hideContact?: boolean }) {
   const button = o.cta
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:30px 0 0"><tr><td style="border-radius:999px;background:#d3ad5b;background-image:linear-gradient(135deg,#ecd595,#d3ad5b 55%,#c8943d)"><a href="${o.cta.href}" style="display:inline-block;padding:15px 32px;border-radius:999px;color:#04142e;font-size:15px;font-weight:700;text-decoration:none;font-family:${FONT}">${esc(o.cta.label)}</a></td></tr></table>`
     : "";
@@ -51,8 +51,8 @@ function layout(o: { preheader: string; kicker: string; title: string; inner: st
 </td></tr>
 <tr><td bgcolor="#04142e" style="background:#04142e;padding:26px 36px;font-family:${FONT}">
   <div style="color:#ffffff;font-size:13px;font-weight:700">Despachante Pastor</div>
-  <div style="margin-top:6px;color:#b8c7db;font-size:12px;line-height:1.7">Rua Cesário Mota, 245 · Santo André, SP<br>
-  Telefone e WhatsApp: <a href="${WHATSAPP}" style="color:#e2c57f;text-decoration:none">(11) 4438-2633</a></div>
+  <div style="margin-top:6px;color:#b8c7db;font-size:12px;line-height:1.7">Rua Cesário Mota, 245 · Santo André, SP${o.hideContact ? "" : `<br>
+  Telefone e WhatsApp: <a href="${WHATSAPP}" style="color:#e2c57f;text-decoration:none">(11) 4438-2633</a>`}</div>
   <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);color:#7f90aa;font-size:11px;line-height:1.6">${reason}</div>
 </td></tr>
 </table></td></tr></table></body></html>`;
@@ -69,26 +69,10 @@ function greet(d: Record<string, unknown>) {
     : p(`<strong style="color:#04142e;font-size:18px">Olá!</strong><br>Atualização sobre a solicitação de <strong style="color:#04142e">${esc(name)}</strong>.`);
 }
 
-const STATUS_COPY: Record<string, { subject: string; title: string; text: string; tag: [string, string, string] }> = {
-  in_review: {
-    subject: "Sua solicitação está em análise",
-    title: "Sua solicitação está em análise",
-    text: "Nossa equipe começou a analisar o questionário enviado. Avisaremos por e-mail a cada novidade, e você também pode acompanhar tudo na Área do cliente.",
-    tag: ["Em análise", "#f6edd8", "#8c6725"],
-  },
-  completed: {
-    subject: "Sua solicitação foi concluída",
-    title: "Solicitação concluída",
-    text: "O atendimento da sua solicitação foi concluído. Se tiver qualquer dúvida, é só responder este e-mail ou falar conosco pelo WhatsApp.",
-    tag: ["Concluído", "#e3f6ec", "#1f7a4d"],
-  },
-};
-
 type Mail = { to: string[]; subject: string; html: string; replyTo?: string };
 
 function build(event: string, d: Record<string, unknown>): Mail | null {
   const staffCta = { label: "Abrir área interna", href: `${SITE}/interno` };
-  const portalCta = { label: "Abrir Área do cliente", href: `${SITE}/portal` };
   const who = String(d.name ?? "sem nome").slice(0, 80);
   switch (event) {
     case "lead_created":
@@ -119,29 +103,21 @@ function build(event: string, d: Record<string, unknown>): Mail | null {
           inner: p(`<strong style="color:#04142e">${esc(titleCase(String(d.name ?? "")))}</strong> respondeu ao pedido de informações adicionais. Veja o texto e os anexos na área interna.`),
         }),
       };
-    case "client_status": {
-      const copy = STATUS_COPY[String(d.status)];
-      if (!copy || !d.to) return null;
-      return {
-        to: [String(d.to)], replyTo: REPLY_TO, subject: copy.subject,
-        html: layout({
-          preheader: copy.title, kicker: "Atualização da solicitação", title: copy.title, client: true, cta: portalCta,
-          inner: greet(d) + `<div style="margin:0 0 18px">${pill(copy.tag[0], copy.tag[1], copy.tag[2])}</div>` + p(esc(copy.text)),
-        }),
-      };
-    }
-    case "client_info_request":
+    case "client_visa_submitted":
       if (!d.to) return null;
       return {
-        to: [String(d.to)], replyTo: REPLY_TO, subject: "Precisamos de mais informações sobre a sua solicitação",
+        to: [String(d.to)], replyTo: REPLY_TO, subject: "Recebemos o seu questionário de visto",
         html: layout({
-          preheader: "Nossa equipe precisa de informações adicionais para continuar.", kicker: "Atualização da solicitação", title: "Precisamos de mais informações", client: true,
-          cta: { label: "Responder na Área do cliente", href: `${SITE}/portal` },
-          inner: greet(d) + `<div style="margin:0 0 18px">${pill("Informações solicitadas", "#fdeed9", "#a45f12")}</div>` + p("Nossa equipe enviou o seguinte pedido:") +
-            `<div style="margin:0 0 18px;padding:18px 20px;border-left:4px solid #d3ad5b;border-radius:0 12px 12px 0;background:#fffbf0;color:#04142e;font-size:16px;line-height:1.7;white-space:pre-wrap;font-family:${FONT}">${esc(d.message)}</div>` +
-            p("Você pode responder por escrito e anexar arquivos diretamente na Área do cliente."),
+          preheader: "Questionário enviado. O atendimento será feito exclusivamente pelo WhatsApp.", kicker: "Visto americano", title: "Questionário enviado", client: true, hideContact: true,
+          inner: greet(d) + `<div style="margin:0 0 18px">${pill("Enviado", "#e3f6ec", "#1f7a4d")}</div>` +
+            p("Recebemos o questionário preenchido. Todas as dúvidas e comunicações futuras serão tratadas <strong style=\"color:#04142e\">exclusivamente pela nossa equipe via WhatsApp</strong>. Fique atento: entraremos em contato pelo número que você cadastrou."),
         }),
       };
+    // Avisos de andamento ao cliente (em análise, concluído, pedido de informações) seguem apenas pelo WhatsApp,
+    // para não gerar e-mails subsequentes depois do envio do questionário.
+    case "client_status":
+    case "client_info_request":
+      return null;
     default:
       return null;
   }

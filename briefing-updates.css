@@ -56,9 +56,9 @@
 .validation-feedback{color:#b42336!important;font-size:11px;line-height:1.5}
 .field-invalid{border-color:#c84555!important;box-shadow:0 0 0 3px rgba(200,69,85,.07)!important}
 @media(max-width:640px){.floating-phone{right:78px;bottom:17px;width:47px;height:47px}.success-actions{flex-direction:column}.success-actions .button{width:100%}}
-.success-whatsapp-notice{display:grid;gap:8px;margin:18px auto 6px;max-width:560px;padding:16px 18px;border:1px solid #e3cf9d;border-radius:14px;background:#fbf5e4;color:#3d3216;text-align:left;font-size:14px;line-height:1.55}
+.success-whatsapp-notice{display:grid;gap:8px;justify-items:center;text-align:center;margin:18px auto 6px;max-width:560px;padding:16px 18px;border:1px solid #e3cf9d;border-radius:14px;background:#fbf5e4;color:#3d3216;font-size:14px;line-height:1.55}
 .success-whatsapp-notice strong{font-size:15px;color:#2b2209}
-.success-whatsapp-notice a{justify-self:start;margin-top:4px;padding:9px 16px;border-radius:10px;background:#1fa855;color:#fff;font-weight:700;font-size:13px;text-decoration:none}
+.success-whatsapp-notice a{justify-self:center;margin-top:4px;padding:9px 16px;border-radius:10px;background:#1fa855;color:#fff;font-weight:700;font-size:13px;text-decoration:none}
 .file-attached{display:flex;align-items:center;gap:12px;margin:2px 0 8px;padding:10px 12px;border:1px solid #bfe3cc;border-radius:12px;background:#f0faf4}
 .file-attached-icon{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:10px;background:#1fa855;color:#fff;font-weight:800;font-size:12px}
 .file-thumb{flex:none;width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid #bfe3cc;background:#fff}
