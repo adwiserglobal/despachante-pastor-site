@@ -103,3 +103,4 @@ textarea.kb-input { resize: vertical; }
   .kb-search { flex: 1 1 100%; }
   .kb-detail-grid { grid-template-columns: 1fr; }
 }
+.visa-export-bar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:16px}

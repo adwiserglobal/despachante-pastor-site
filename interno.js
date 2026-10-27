@@ -10,6 +10,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 import { createKanban } from './interno-kanban.js';
+import { buildVisaSections, exportVisaDocx, exportVisaPdf } from './interno-export.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyD05n9UT7vPVswl699-DXDJ-YZhiqSqVEU',
@@ -411,43 +412,60 @@ async function openVisa(row) {
     detailMeta.textContent = `${detail.form_data?.applicant_relationship || 'Titular'} • ${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
     detailContent.replaceChildren();
 
-    const section = document.createElement('section');
-    section.className = 'visa-data-section';
-    section.appendChild(createText('h3', 'Dados do formulário'));
-    const grid = document.createElement('div');
-    grid.className = 'visa-data-grid';
+    const sections = buildVisaSections(detail.form_data || {}, fieldLabels);
+    const exportData = { title: detailTitle.textContent, meta: detailMeta.textContent, sections };
 
-    Object.entries(detail.form_data || {}).forEach(([key, value]) => {
-      const item = document.createElement('div');
-      const text = humanValue(value);
-      item.className = `visa-data-item${text.length > 100 ? ' full' : ''}`;
-      item.appendChild(createText('small', fieldLabels[key] || key.replaceAll('_', ' ')));
-      if (['passport_file','previous_visa_file','other_nationality_file'].includes(key) && value) {
-        const button = document.createElement('button');
-        button.className = 'detail-button';
-        button.type = 'button';
-        button.textContent = 'Abrir anexo ↗';
-        button.addEventListener('click', async () => {
-          button.disabled = true;
-          const popup = window.open('', '_blank');
-          try {
-            const {url} = await api('get_visa_document', {id:detail.id,field:key});
-            if (popup) { popup.opener = null; popup.location.href = url; } else { window.location.assign(url); }
-          } catch (error) {
-            if (popup) popup.close();
-            window.alert(error?.message || 'Não foi possível abrir este anexo.');
-          } finally {
-            button.disabled = false;
-          }
-        });
-        item.appendChild(button);
-      } else {
-        item.appendChild(createText('strong', text));
-      }
-      grid.appendChild(item);
+    const toolbar = document.createElement('div');
+    toolbar.className = 'visa-export-bar';
+    [['Exportar PDF', exportVisaPdf], ['Exportar DOCX', exportVisaDocx]].forEach(([label, run]) => {
+      const exportButton = document.createElement('button');
+      exportButton.type = 'button';
+      exportButton.className = 'detail-button';
+      exportButton.textContent = label;
+      exportButton.addEventListener('click', () => {
+        try { run(exportData); } catch (error) { window.alert(error?.message || 'Não foi possível exportar.'); }
+      });
+      toolbar.appendChild(exportButton);
     });
+    detailContent.appendChild(toolbar);
 
-    section.appendChild(grid);
+    const dataSections = sections.map((group) => {
+      const section = document.createElement('section');
+      section.className = 'visa-data-section';
+      section.appendChild(createText('h3', group.title));
+      const grid = document.createElement('div');
+      grid.className = 'visa-data-grid';
+      group.items.forEach((entry) => {
+        const item = document.createElement('div');
+        item.className = `visa-data-item${entry.value.length > 100 ? ' full' : ''}`;
+        item.appendChild(createText('small', entry.label));
+        if (entry.hasFile) {
+          const button = document.createElement('button');
+          button.className = 'detail-button';
+          button.type = 'button';
+          button.textContent = 'Abrir anexo ↗';
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            const popup = window.open('', '_blank');
+            try {
+              const {url} = await api('get_visa_document', {id:detail.id,field:entry.key});
+              if (popup) { popup.opener = null; popup.location.href = url; } else { window.location.assign(url); }
+            } catch (error) {
+              if (popup) popup.close();
+              window.alert(error?.message || 'Não foi possível abrir este anexo.');
+            } finally {
+              button.disabled = false;
+            }
+          });
+          item.appendChild(button);
+        } else {
+          item.appendChild(createText('strong', entry.value));
+        }
+        grid.appendChild(item);
+      });
+      section.appendChild(grid);
+      return section;
+    });
     if (infoRequests.length) {
       const requestsSection = document.createElement('section');
       requestsSection.className = 'visa-data-section';
@@ -488,7 +506,7 @@ async function openVisa(row) {
       });
       detailContent.appendChild(requestsSection);
     }
-    detailContent.appendChild(section);
+    dataSections.forEach((section) => detailContent.appendChild(section));
     detailDialog.showModal();
   } catch (error) {
     window.alert(error?.message || 'Não foi possível abrir o formulário.');
