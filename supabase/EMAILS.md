@@ -12,9 +12,9 @@ A função só aceita chamadas com o cabeçalho `x-webhook-secret` igual ao segr
 | Novo contato do site | INSERT em `quote_requests` | despachantepastorinterno@gmail.com e desp.pastor@gmail.com |
 | Formulário de visto enviado | `visa_applications.status` → `submitted` | equipe |
 | Cliente respondeu pedido de informação | `visa_info_requests` → `answered` | equipe |
-| Em análise | `status` → `in_review` (após envio) | cliente |
-| Pedido de informações adicionais | INSERT em `visa_info_requests` | cliente (com a mensagem do despachante) |
-| Concluído | `status` → `completed` (após envio) | cliente |
+| Questionário recebido | `status` → `submitted` | cliente (único e-mail ao cliente: avisa que o atendimento será exclusivamente via WhatsApp, sem link) |
+
+Em análise, pedido de informações e concluído **não enviam mais e-mail ao cliente** (a Edge Function ignora `client_status` e `client_info_request`); o contato segue pelo WhatsApp. O aviso no sino da Área do cliente continua.
 
 ## Configuração
 - Segredo da função: `RESEND_API_KEY` (Supabase → Edge Functions → Secrets). Use uma chave do Resend com permissão "Sending access" para o domínio despachantepastor.com.br.
