@@ -177,7 +177,7 @@ async function renderAttachments() {
 `.replace("__ATTACHMENT_DATA__", attachmentData);
 
   const pdfLibraryScript = hasPdf
-    ? '<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"><\\/script>'
+    ? '<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>'
     : '';
 
   const html =
