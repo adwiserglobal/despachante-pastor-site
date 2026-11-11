@@ -418,16 +418,61 @@ async function openVisa(row) {
     const toolbar = document.createElement('div');
     toolbar.className = 'visa-export-bar';
     [
-      ['Imprimir', exportVisaPdf, 'print-button'],
-      ['Exportar PDF', exportVisaPdf, 'secondary-export-button'],
-      ['Exportar DOCX', exportVisaDocx, 'secondary-export-button'],
-    ].forEach(([label, run, buttonClass]) => {
+      { label: 'Imprimir', action: 'print', className: 'print-button' },
+      { label: 'Exportar PDF', action: 'pdf', className: 'secondary-export-button' },
+      { label: 'Exportar DOCX', action: 'docx', className: 'secondary-export-button' },
+    ].forEach(({ label, action, className }) => {
       const exportButton = document.createElement('button');
       exportButton.type = 'button';
-      exportButton.className = `detail-button ${buttonClass}`;
+      exportButton.className = `detail-button ${className}`;
       exportButton.textContent = label;
-      exportButton.addEventListener('click', () => {
-        try { run(exportData); } catch (error) { window.alert(error?.message || 'Não foi possível exportar.'); }
+      exportButton.addEventListener('click', async () => {
+        if (action === 'docx') {
+          try {
+            exportVisaDocx(exportData);
+          } catch (error) {
+            window.alert(error?.message || 'Não foi possível exportar.');
+          }
+          return;
+        }
+
+        // Abre a janela durante o clique para evitar bloqueio de pop-up enquanto os anexos carregam.
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          window.alert('Permita pop-ups para imprimir o formulário e seus anexos.');
+          return;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write('<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Preparando impressão</title><body style="font:14px Arial,sans-serif;padding:32px;color:#14233b">Preparando formulário e anexos para impressão...</body></html>');
+        printWindow.document.close();
+        exportButton.disabled = true;
+
+        try {
+          const fileItems = sections
+            .flatMap((group) => group.items)
+            .filter((item) => item.isFile && item.hasFile && detail.form_data?.[item.key]);
+
+          const attachments = await Promise.all(fileItems.map(async (item) => {
+            const { url } = await api('get_visa_document', { id: detail.id, field: item.key });
+            if (!url) throw new Error(`Não foi possível acessar o anexo: ${item.label}.`);
+            const storagePath = String(detail.form_data[item.key]);
+            const extension = storagePath.split('.').pop().split('?')[0].toLowerCase();
+            return {
+              label: item.label,
+              fileName: storagePath.split('/').pop() || item.label,
+              url,
+              kind: extension === 'pdf' ? 'pdf' : 'image',
+            };
+          }));
+
+          exportVisaPdf({ ...exportData, attachments, popup: printWindow });
+        } catch (error) {
+          printWindow.close();
+          window.alert(error?.message || 'Não foi possível preparar os anexos para impressão.');
+        } finally {
+          exportButton.disabled = false;
+        }
       });
       toolbar.appendChild(exportButton);
     });
