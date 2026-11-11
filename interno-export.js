@@ -150,8 +150,11 @@ async function renderAttachments() {
 (async function prepareAndPrint() {
   try {
     if (hasPdf) {
-      pdfjsLib = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.mjs");
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.worker.mjs";
+      if (!window.pdfjsLib) {
+        throw new Error("O leitor de PDF não carregou. Verifique sua conexão e tente novamente.");
+      }
+      pdfjsLib = window.pdfjsLib;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     }
 
     await renderAttachments();
@@ -172,6 +175,10 @@ async function renderAttachments() {
   }
 })();
 `.replace("__ATTACHMENT_DATA__", attachmentData);
+
+  const pdfLibraryScript = hasPdf
+    ? '<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"><\\/script>'
+    : '';
 
   const html =
     '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>' +
@@ -218,7 +225,8 @@ async function renderAttachments() {
     '<div id="print-error" hidden></div>' +
     '<footer>Documento gerado pela área interna em ' +
     esc(new Date().toLocaleString('pt-BR')) + '</footer>' +
-    '<script type="module">' + renderScript + '</script>' +
+    pdfLibraryScript +
+    '<script>' + renderScript + '</script>' +
     '</body></html>';
 
   popup.document.open();
