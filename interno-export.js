@@ -71,188 +71,30 @@ export function exportVisaPdf(options) {
   const popup = options.popup || window.open('', '_blank');
   if (!popup) throw new Error('Permita pop-ups para imprimir o formulário.');
 
-  const body = sections.map((section) =>
-    '<section><h2>' + esc(section.title) + '</h2>' +
-    '<table>' + section.items.map((item) =>
-      '<tr><th>' + esc(item.label) + '</th><td>' + esc(item.value) + '</td></tr>'
-    ).join('') + '</table></section>'
-  ).join('');
+  const payload = {
+    title,
+    meta,
+    sections,
+    attachments,
+  };
 
-  const hasPdf = attachments.some((attachment) => attachment.kind === 'pdf');
-  const attachmentData = JSON.stringify(attachments);
-  const pdfImport = 'const hasPdf = ' + (hasPdf ? 'true' : 'false') + '; let pdfjsLib = null;';
+  // A prévia é servida como uma página própria do site. Isso evita que a CSP
+  // rígida da área interna bloqueie scripts escritos dinamicamente em about:blank.
+  const onPrintReady = (event) => {
+    if (event.source !== popup) return;
+    if (event.origin !== window.location.origin) return;
+    if (event.data?.type !== 'despachante-pastor:print-ready') return;
 
-  const renderScript = pdfImport + String.raw`
-const attachments = __ATTACHMENT_DATA__;
-const root = document.getElementById("attachment-root");
-const printButton = document.getElementById("print-action");
-const printStatus = document.getElementById("print-status");
+    window.removeEventListener('message', onPrintReady);
+    popup.postMessage({
+      type: 'despachante-pastor:print-payload',
+      payload,
+    }, window.location.origin);
+  };
 
-printButton.addEventListener("click", () => {
-  window.focus();
-  window.print();
-});
-
-function withTimeout(promise, milliseconds, message) {
-  let timeoutId;
-  const timeout = new Promise((resolve, reject) => {
-    timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
-  });
-  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+  window.addEventListener('message', onPrintReady);
+  popup.location.replace(new URL('/interno-print.html', window.location.origin).href);
 }
-
-function loadPdfLibrary() {
-  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-
-  return withTimeout(new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
-    script.onload = () => window.pdfjsLib
-      ? resolve(window.pdfjsLib)
-      : reject(new Error("O leitor de PDF não foi inicializado."));
-    script.onerror = () => reject(new Error("Não foi possível carregar o leitor de PDF. Verifique sua conexão."));
-    document.head.appendChild(script);
-  }), 15000, "O leitor de PDF demorou demais para carregar. Verifique sua conexão e tente novamente.");
-}
-
-function makeElement(tag, className, text) {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  if (text) element.textContent = text;
-  return element;
-}
-
-async function renderAttachments() {
-  if (!attachments.length) return;
-
-  root.appendChild(makeElement("h2", "attachments-title", "Anexos do formulário"));
-
-  for (let index = 0; index < attachments.length; index += 1) {
-    const attachment = attachments[index];
-    const block = makeElement("section", "attachment-block");
-    if (index > 0) block.classList.add("next-attachment");
-    block.appendChild(makeElement("h3", "attachment-label", attachment.label));
-    root.appendChild(block);
-
-    if (attachment.kind === "pdf") {
-      if (!pdfjsLib) throw new Error("Não foi possível carregar o leitor de PDF.");
-      const pdf = await withTimeout(
-        pdfjsLib.getDocument({ url: attachment.url }).promise,
-        30000,
-        "O PDF demorou demais para carregar: " + attachment.label
-      );
-
-      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-        const page = await pdf.getPage(pageNumber);
-        const viewport = page.getViewport({ scale: 2 });
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.ceil(viewport.width);
-        canvas.height = Math.ceil(viewport.height);
-        canvas.setAttribute("aria-label", attachment.label + " - página " + pageNumber);
-        const context = canvas.getContext("2d", { alpha: false });
-        await page.render({ canvasContext: context, viewport }).promise;
-
-        const pageWrap = makeElement("div", "pdf-attachment-page");
-        if (pageNumber > 1) pageWrap.classList.add("next-pdf-page");
-        pageWrap.appendChild(canvas);
-        block.appendChild(pageWrap);
-      }
-    } else {
-      const imageWrap = makeElement("div", "image-attachment-page");
-      const image = document.createElement("img");
-      image.className = "attachment-image";
-      image.alt = attachment.label;
-      await withTimeout(new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = () => reject(new Error("Não foi possível carregar o anexo de imagem: " + attachment.label));
-        image.src = attachment.url;
-      }), 30000, "O anexo de imagem demorou demais para carregar: " + attachment.label);
-      imageWrap.appendChild(image);
-      block.appendChild(imageWrap);
-    }
-  }
-}
-
-(async function prepareAndPrint() {
-  try {
-    if (hasPdf) {
-      pdfjsLib = await loadPdfLibrary();
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-    }
-
-    await renderAttachments();
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-
-    printStatus.textContent = attachments.length
-      ? "Formulário e " + attachments.length + " anexo(s) prontos."
-      : "Formulário pronto para impressão.";
-    printButton.textContent = "Imprimir formulário e anexos";
-    printButton.disabled = false;
-  } catch (error) {
-    const message = document.getElementById("print-error");
-    message.hidden = false;
-    message.textContent = "Não foi possível preparar todos os anexos. " +
-      (error && error.message ? error.message : "Tente novamente.");
-    printStatus.textContent = "Falha ao preparar os arquivos. Corrija antes de imprimir.";
-    printButton.disabled = true;
-  }
-})();
-`.replace("__ATTACHMENT_DATA__", attachmentData);
-
-  const html =
-    '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>' +
-    esc(title) + ' - Formulário de visto</title>' +
-    '<style>' +
-    '@page{size:A4;margin:16mm 14mm}' +
-    '*{box-sizing:border-box}' +
-    'body{margin:0;font:12px/1.5 Arial,Helvetica,sans-serif;color:#14233b}' +
-    'header{padding-bottom:12px;margin-bottom:14px;border-bottom:3px solid #c9a24d}' +
-    'header small{color:#9a7430;font-weight:700;letter-spacing:.14em;font-size:10px}' +
-    'header h1{margin:4px 0;font-size:22px;color:#071b3a}' +
-    'header p{margin:0;color:#5b6a80;font-size:11px}' +
-    'section{margin-bottom:16px}' +
-    'h2{margin:0 0 6px;padding:6px 10px;background:#071b3a;color:#fff;font-size:13px;border-radius:4px;break-after:avoid}' +
-    'table{width:100%;border-collapse:collapse}' +
-    'tr{break-inside:avoid;page-break-inside:avoid}' +
-    'th,td{padding:6px 8px;border:1px solid #dbe2ec;vertical-align:top;text-align:left}' +
-    'th{width:38%;background:#f3f6fa;font-weight:700;color:#33465f}' +
-    'td{white-space:pre-wrap;overflow-wrap:anywhere}' +
-    'footer{margin-top:18px;color:#8a94a3;font-size:10px;text-align:center}' +
-    '.attachments-title{break-before:page;page-break-before:always;margin-bottom:14px}' +
-    '.attachment-block{margin:0}' +
-    '.attachment-block.next-attachment{break-before:page;page-break-before:always}' +
-    '.attachment-label{margin:0 0 10px;color:#071b3a;font-size:14px;break-after:avoid}' +
-    '.image-attachment-page{height:245mm;display:flex;align-items:center;justify-content:center;break-inside:avoid;page-break-inside:avoid}' +
-    '.attachment-image{display:block;max-width:100%;max-height:245mm;width:auto;height:auto;object-fit:contain}' +
-    '.pdf-attachment-page{display:flex;align-items:center;justify-content:center;break-inside:avoid;page-break-inside:avoid}' +
-    '.pdf-attachment-page canvas{display:block;width:176mm;max-width:100%;height:auto}' +
-    '.pdf-attachment-page.next-pdf-page{break-before:page;page-break-before:always}' +
-    '.screen-toolbar{position:sticky;top:8px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding:12px 14px;background:#f3f6fa;border:1px solid #dbe2ec;border-radius:8px}' +
-    '.screen-toolbar strong{display:block;margin-bottom:3px;color:#14233b;font-size:13px}' +
-    '.screen-toolbar span{color:#5b6a80;font-size:12px}' +
-    '.screen-toolbar button{flex-shrink:0;padding:10px 16px;border:0;border-radius:6px;background:#071b3a;color:#fff;font-weight:700;cursor:pointer}' +
-    '.screen-toolbar button:disabled{opacity:.55;cursor:wait}' +
-    '#print-error{padding:14px;border:1px solid #d88;border-radius:8px;color:#8a2020;background:#fff4f4}' +
-    '@media print{.screen-toolbar{display:none!important}}' +
-    '@media screen{body{max-width:900px;margin:24px auto;padding:0 24px}.image-attachment-page{height:auto;min-height:240px}.attachment-image{max-height:70vh}.pdf-attachment-page canvas{width:min(100%,760px)}#print-error{margin:20px 0}}' +
-    '</style></head><body>' +
-    '<div class="screen-toolbar"><div><strong>Impressão do formulário</strong><span id="print-status">Preparando formulário e anexos...</span></div><button type="button" id="print-action" disabled>Preparando...</button></div>' +
-    '<header><small>DESPACHANTE PASTOR · FORMULÁRIO DE VISTO</small><h1>' +
-    esc(title) + '</h1><p>' + esc(meta) + '</p></header>' +
-    body +
-    '<div id="attachment-root"></div>' +
-    '<div id="print-error" hidden></div>' +
-    '<footer>Documento gerado pela área interna em ' +
-    esc(new Date().toLocaleString('pt-BR')) + '</footer>' +
-    '<script>' + renderScript + '</script>' +
-    '</body></html>';
-
-  popup.document.open();
-  popup.document.write(html);
-  popup.document.close();
-  popup.focus();
-}
-
 
 // ---------- DOCX ----------
 const crcTable = (() => {
