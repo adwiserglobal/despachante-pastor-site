@@ -417,10 +417,14 @@ async function openVisa(row) {
 
     const toolbar = document.createElement('div');
     toolbar.className = 'visa-export-bar';
-    [['Exportar PDF', exportVisaPdf], ['Exportar DOCX', exportVisaDocx]].forEach(([label, run]) => {
+    [
+      ['Imprimir', exportVisaPdf, 'print-button'],
+      ['Exportar PDF', exportVisaPdf, 'secondary-export-button'],
+      ['Exportar DOCX', exportVisaDocx, 'secondary-export-button'],
+    ].forEach(([label, run, buttonClass]) => {
       const exportButton = document.createElement('button');
       exportButton.type = 'button';
-      exportButton.className = 'detail-button';
+      exportButton.className = `detail-button ${buttonClass}`;
       exportButton.textContent = label;
       exportButton.addEventListener('click', () => {
         try { run(exportData); } catch (error) { window.alert(error?.message || 'Não foi possível exportar.'); }
