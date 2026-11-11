@@ -93,6 +93,28 @@ printButton.addEventListener("click", () => {
   window.print();
 });
 
+function withTimeout(promise, milliseconds, message) {
+  let timeoutId;
+  const timeout = new Promise((resolve, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
+  });
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
+}
+
+function loadPdfLibrary() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+
+  return withTimeout(new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+    script.onload = () => window.pdfjsLib
+      ? resolve(window.pdfjsLib)
+      : reject(new Error("O leitor de PDF não foi inicializado."));
+    script.onerror = () => reject(new Error("Não foi possível carregar o leitor de PDF. Verifique sua conexão."));
+    document.head.appendChild(script);
+  }), 15000, "O leitor de PDF demorou demais para carregar. Verifique sua conexão e tente novamente.");
+}
+
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
   if (className) element.className = className;
@@ -114,7 +136,11 @@ async function renderAttachments() {
 
     if (attachment.kind === "pdf") {
       if (!pdfjsLib) throw new Error("Não foi possível carregar o leitor de PDF.");
-      const pdf = await pdfjsLib.getDocument({ url: attachment.url }).promise;
+      const pdf = await withTimeout(
+        pdfjsLib.getDocument({ url: attachment.url }).promise,
+        30000,
+        "O PDF demorou demais para carregar: " + attachment.label
+      );
 
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
         const page = await pdf.getPage(pageNumber);
@@ -136,11 +162,11 @@ async function renderAttachments() {
       const image = document.createElement("img");
       image.className = "attachment-image";
       image.alt = attachment.label;
-      await new Promise((resolve, reject) => {
+      await withTimeout(new Promise((resolve, reject) => {
         image.onload = resolve;
         image.onerror = () => reject(new Error("Não foi possível carregar o anexo de imagem: " + attachment.label));
         image.src = attachment.url;
-      });
+      }), 30000, "O anexo de imagem demorou demais para carregar: " + attachment.label);
       imageWrap.appendChild(image);
       block.appendChild(imageWrap);
     }
@@ -150,10 +176,7 @@ async function renderAttachments() {
 (async function prepareAndPrint() {
   try {
     if (hasPdf) {
-      if (!window.pdfjsLib) {
-        throw new Error("O leitor de PDF não carregou. Verifique sua conexão e tente novamente.");
-      }
-      pdfjsLib = window.pdfjsLib;
+      pdfjsLib = await loadPdfLibrary();
       pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     }
 
@@ -175,10 +198,6 @@ async function renderAttachments() {
   }
 })();
 `.replace("__ATTACHMENT_DATA__", attachmentData);
-
-  const pdfLibraryScript = hasPdf
-    ? '<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>'
-    : '';
 
   const html =
     '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>' +
@@ -225,7 +244,6 @@ async function renderAttachments() {
     '<div id="print-error" hidden></div>' +
     '<footer>Documento gerado pela área interna em ' +
     esc(new Date().toLocaleString('pt-BR')) + '</footer>' +
-    pdfLibraryScript +
     '<script>' + renderScript + '</script>' +
     '</body></html>';
 
