@@ -80,14 +80,18 @@ export function exportVisaPdf(options) {
 
   const hasPdf = attachments.some((attachment) => attachment.kind === 'pdf');
   const attachmentData = JSON.stringify(attachments);
-  const pdfImport = hasPdf
-    ? 'import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.mjs";' +
-      'pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.worker.mjs";'
-    : 'const pdfjsLib = null;';
+  const pdfImport = 'const hasPdf = ' + (hasPdf ? 'true' : 'false') + '; let pdfjsLib = null;';
 
   const renderScript = pdfImport + String.raw`
 const attachments = __ATTACHMENT_DATA__;
 const root = document.getElementById("attachment-root");
+const printButton = document.getElementById("print-action");
+const printStatus = document.getElementById("print-status");
+
+printButton.addEventListener("click", () => {
+  window.focus();
+  window.print();
+});
 
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
@@ -145,15 +149,26 @@ async function renderAttachments() {
 
 (async function prepareAndPrint() {
   try {
+    if (hasPdf) {
+      pdfjsLib = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.mjs");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.worker.mjs";
+    }
+
     await renderAttachments();
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    window.focus();
-    window.print();
+
+    printStatus.textContent = attachments.length
+      ? "Formulário e " + attachments.length + " anexo(s) prontos."
+      : "Formulário pronto para impressão.";
+    printButton.textContent = "Imprimir formulário e anexos";
+    printButton.disabled = false;
   } catch (error) {
     const message = document.getElementById("print-error");
     message.hidden = false;
     message.textContent = "Não foi possível preparar todos os anexos. " +
       (error && error.message ? error.message : "Tente novamente.");
+    printStatus.textContent = "Falha ao preparar os arquivos. Corrija antes de imprimir.";
+    printButton.disabled = true;
   }
 })();
 `.replace("__ATTACHMENT_DATA__", attachmentData);
@@ -186,12 +201,19 @@ async function renderAttachments() {
     '.pdf-attachment-page{display:flex;align-items:center;justify-content:center;break-inside:avoid;page-break-inside:avoid}' +
     '.pdf-attachment-page canvas{display:block;width:176mm;max-width:100%;height:auto}' +
     '.pdf-attachment-page.next-pdf-page{break-before:page;page-break-before:always}' +
+    '.screen-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding:12px 14px;background:#f3f6fa;border:1px solid #dbe2ec;border-radius:8px}' +
+    '.screen-toolbar strong{display:block;margin-bottom:3px;color:#14233b;font-size:13px}' +
+    '.screen-toolbar span{color:#5b6a80;font-size:12px}' +
+    '.screen-toolbar button{flex-shrink:0;padding:10px 16px;border:0;border-radius:6px;background:#071b3a;color:#fff;font-weight:700;cursor:pointer}' +
+    '.screen-toolbar button:disabled{opacity:.55;cursor:wait}' +
     '#print-error{padding:14px;border:1px solid #d88;border-radius:8px;color:#8a2020;background:#fff4f4}' +
-    '@media screen{body{max-width:900px;margin:32px auto;padding:0 24px}.image-attachment-page{height:auto;min-height:240px}.attachment-image{max-height:70vh}.pdf-attachment-page canvas{width:min(100%,760px)}#print-error{margin:20px 0}}' +
+    '@media print{.screen-toolbar{display:none!important}}' +
+    '@media screen{body{max-width:900px;margin:24px auto;padding:0 24px}.image-attachment-page{height:auto;min-height:240px}.attachment-image{max-height:70vh}.pdf-attachment-page canvas{width:min(100%,760px)}#print-error{margin:20px 0}}' +
     '</style></head><body>' +
     '<header><small>DESPACHANTE PASTOR · FORMULÁRIO DE VISTO</small><h1>' +
     esc(title) + '</h1><p>' + esc(meta) + '</p></header>' +
     body +
+    '<div class="screen-toolbar"><div><strong>Impressão do formulário</strong><span id="print-status">Preparando formulário e anexos...</span></div><button type="button" id="print-action" disabled>Preparando...</button></div>' +
     '<div id="attachment-root"></div>' +
     '<div id="print-error" hidden></div>' +
     '<footer>Documento gerado pela área interna em ' +
