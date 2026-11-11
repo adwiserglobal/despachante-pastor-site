@@ -19,6 +19,20 @@ function withTimeout(promise, milliseconds, message) {
   return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timeoutId));
 }
 
+function loadPdfLibrary() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+
+  return withTimeout(new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+    script.onload = () => window.pdfjsLib
+      ? resolve(window.pdfjsLib)
+      : reject(new Error("O leitor de PDF não foi inicializado."));
+    script.onerror = () => reject(new Error("Não foi possível carregar o leitor de PDF. Verifique sua conexão."));
+    document.head.appendChild(script);
+  }), 20000, "O leitor de PDF demorou demais para carregar. Verifique sua conexão e tente novamente.");
+}
+
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
   if (className) element.className = className;
@@ -58,12 +72,8 @@ async function renderAttachments(attachments) {
 
   if (pdfAttachments.length) {
     printStatus.textContent = "Carregando leitor de PDF...";
-    pdfjsLib = await withTimeout(
-      import("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.mjs"),
-      20000,
-      "O leitor de PDF demorou demais para carregar. Verifique sua conexão e tente novamente."
-    );
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.mjs";
+    pdfjsLib = await loadPdfLibrary();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
   }
 
   for (let index = 0; index < attachments.length; index += 1) {
