@@ -163,6 +163,12 @@ window.addEventListener("message", (event) => {
 
 if (window.opener) {
   window.opener.postMessage({ type: "despachante-pastor:print-ready" }, window.location.origin);
+  window.setTimeout(() => {
+    if (payloadReceived) return;
+    printStatus.textContent = "A conexão com a área interna não foi estabelecida.";
+    printError.hidden = false;
+    printError.textContent = "Feche esta janela e clique em Imprimir novamente pela área interna.";
+  }, 15000);
 } else {
   printStatus.textContent = "Abra a impressão pela área interna do sistema.";
 }
