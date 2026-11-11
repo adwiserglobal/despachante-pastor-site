@@ -85,27 +85,33 @@ export function exportVisaPdf(options) {
       'pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@6.5.438/build/pdf.worker.mjs";'
     : 'const pdfjsLib = null;';
 
-  const renderScript = pdfImport + '
-const attachments = ' + attachmentData + ';
+  const renderScript = pdfImport + String.raw`
+const attachments = __ATTACHMENT_DATA__;
 const root = document.getElementById("attachment-root");
+
 function makeElement(tag, className, text) {
   const element = document.createElement(tag);
   if (className) element.className = className;
   if (text) element.textContent = text;
   return element;
 }
+
 async function renderAttachments() {
   if (!attachments.length) return;
+
   root.appendChild(makeElement("h2", "attachments-title", "Anexos do formulário"));
 
-  for (const attachment of attachments) {
+  for (let index = 0; index < attachments.length; index += 1) {
+    const attachment = attachments[index];
     const block = makeElement("section", "attachment-block");
+    if (index > 0) block.classList.add("next-attachment");
     block.appendChild(makeElement("h3", "attachment-label", attachment.label));
     root.appendChild(block);
 
     if (attachment.kind === "pdf") {
       if (!pdfjsLib) throw new Error("Não foi possível carregar o leitor de PDF.");
       const pdf = await pdfjsLib.getDocument({ url: attachment.url }).promise;
+
       for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
         const page = await pdf.getPage(pageNumber);
         const viewport = page.getViewport({ scale: 2 });
@@ -126,10 +132,10 @@ async function renderAttachments() {
       const image = document.createElement("img");
       image.className = "attachment-image";
       image.alt = attachment.label;
-      image.src = attachment.url;
       await new Promise((resolve, reject) => {
         image.onload = resolve;
         image.onerror = () => reject(new Error("Não foi possível carregar o anexo de imagem: " + attachment.label));
+        image.src = attachment.url;
       });
       imageWrap.appendChild(image);
       block.appendChild(imageWrap);
@@ -146,10 +152,11 @@ async function renderAttachments() {
   } catch (error) {
     const message = document.getElementById("print-error");
     message.hidden = false;
-    message.textContent = "Não foi possível preparar todos os anexos. " + (error && error.message ? error.message : "Tente novamente.");
+    message.textContent = "Não foi possível preparar todos os anexos. " +
+      (error && error.message ? error.message : "Tente novamente.");
   }
 })();
-';
+`.replace("__ATTACHMENT_DATA__", attachmentData);
 
   const html =
     '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>' +
@@ -171,7 +178,8 @@ async function renderAttachments() {
     'td{white-space:pre-wrap;overflow-wrap:anywhere}' +
     'footer{margin-top:18px;color:#8a94a3;font-size:10px;text-align:center}' +
     '.attachments-title{break-before:page;page-break-before:always;margin-bottom:14px}' +
-    '.attachment-block{break-before:page;page-break-before:always;margin:0;}' +
+    '.attachment-block{margin:0}' +
+    '.attachment-block.next-attachment{break-before:page;page-break-before:always}' +
     '.attachment-label{margin:0 0 10px;color:#071b3a;font-size:14px;break-after:avoid}' +
     '.image-attachment-page{height:245mm;display:flex;align-items:center;justify-content:center;break-inside:avoid;page-break-inside:avoid}' +
     '.attachment-image{display:block;max-width:100%;max-height:245mm;width:auto;height:auto;object-fit:contain}' +
@@ -196,6 +204,7 @@ async function renderAttachments() {
   popup.document.close();
   popup.focus();
 }
+
 
 // ---------- DOCX ----------
 const crcTable = (() => {
