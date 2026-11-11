@@ -201,7 +201,7 @@ async function renderAttachments() {
     '.pdf-attachment-page{display:flex;align-items:center;justify-content:center;break-inside:avoid;page-break-inside:avoid}' +
     '.pdf-attachment-page canvas{display:block;width:176mm;max-width:100%;height:auto}' +
     '.pdf-attachment-page.next-pdf-page{break-before:page;page-break-before:always}' +
-    '.screen-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding:12px 14px;background:#f3f6fa;border:1px solid #dbe2ec;border-radius:8px}' +
+    '.screen-toolbar{position:sticky;top:8px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding:12px 14px;background:#f3f6fa;border:1px solid #dbe2ec;border-radius:8px}' +
     '.screen-toolbar strong{display:block;margin-bottom:3px;color:#14233b;font-size:13px}' +
     '.screen-toolbar span{color:#5b6a80;font-size:12px}' +
     '.screen-toolbar button{flex-shrink:0;padding:10px 16px;border:0;border-radius:6px;background:#071b3a;color:#fff;font-weight:700;cursor:pointer}' +
@@ -210,10 +210,10 @@ async function renderAttachments() {
     '@media print{.screen-toolbar{display:none!important}}' +
     '@media screen{body{max-width:900px;margin:24px auto;padding:0 24px}.image-attachment-page{height:auto;min-height:240px}.attachment-image{max-height:70vh}.pdf-attachment-page canvas{width:min(100%,760px)}#print-error{margin:20px 0}}' +
     '</style></head><body>' +
+    '<div class="screen-toolbar"><div><strong>Impressão do formulário</strong><span id="print-status">Preparando formulário e anexos...</span></div><button type="button" id="print-action" disabled>Preparando...</button></div>' +
     '<header><small>DESPACHANTE PASTOR · FORMULÁRIO DE VISTO</small><h1>' +
     esc(title) + '</h1><p>' + esc(meta) + '</p></header>' +
     body +
-    '<div class="screen-toolbar"><div><strong>Impressão do formulário</strong><span id="print-status">Preparando formulário e anexos...</span></div><button type="button" id="print-action" disabled>Preparando...</button></div>' +
     '<div id="attachment-root"></div>' +
     '<div id="print-error" hidden></div>' +
     '<footer>Documento gerado pela área interna em ' +
