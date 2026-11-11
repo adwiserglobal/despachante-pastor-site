@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Preparando impressão | Despachante Pastor</title>
+  <style>
+    @page { size: A4; margin: 16mm 14mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 12px/1.5 Arial, Helvetica, sans-serif; color: #14233b; }
+    header { padding-bottom: 12px; margin-bottom: 14px; border-bottom: 3px solid #c9a24d; }
+    header small { color: #9a7430; font-weight: 700; letter-spacing: .14em; font-size: 10px; }
+    header h1 { margin: 4px 0; font-size: 22px; color: #071b3a; }
+    header p { margin: 0; color: #5b6a80; font-size: 11px; }
+    section { margin-bottom: 16px; }
+    h2 { margin: 0 0 6px; padding: 6px 10px; background: #071b3a; color: #fff; font-size: 13px; border-radius: 4px; break-after: avoid; }
+    table { width: 100%; border-collapse: collapse; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    th, td { padding: 6px 8px; border: 1px solid #dbe2ec; vertical-align: top; text-align: left; }
+    th { width: 38%; background: #f3f6fa; font-weight: 700; color: #33465f; }
+    td { white-space: pre-wrap; overflow-wrap: anywhere; }
+    footer { margin-top: 18px; color: #8a94a3; font-size: 10px; text-align: center; }
+    .attachments-title { break-before: page; page-break-before: always; margin-bottom: 14px; }
+    .attachment-block { margin: 0; }
+    .attachment-block.next-attachment { break-before: page; page-break-before: always; }
+    .attachment-label { margin: 0 0 10px; color: #071b3a; font-size: 14px; break-after: avoid; }
+    .image-attachment-page { height: 245mm; display: flex; align-items: center; justify-content: center; break-inside: avoid; page-break-inside: avoid; }
+    .attachment-image { display: block; max-width: 100%; max-height: 245mm; width: auto; height: auto; object-fit: contain; }
+    .pdf-attachment-page { display: flex; align-items: center; justify-content: center; break-inside: avoid; page-break-inside: avoid; }
+    .pdf-attachment-page canvas { display: block; width: 176mm; max-width: 100%; height: auto; }
+    .pdf-attachment-page.next-pdf-page { break-before: page; page-break-before: always; }
+    .screen-toolbar { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px auto; max-width: 900px; padding: 12px 14px; background: #f3f6fa; border: 1px solid #dbe2ec; border-radius: 8px; }
+    .screen-toolbar strong { display: block; margin-bottom: 3px; color: #14233b; font-size: 13px; }
+    .screen-toolbar span { color: #5b6a80; font-size: 12px; }
+    .screen-toolbar button { flex-shrink: 0; padding: 10px 16px; border: 0; border-radius: 6px; background: #071b3a; color: #fff; font-weight: 700; cursor: pointer; }
+    .screen-toolbar button:disabled { opacity: .55; cursor: wait; }
+    #print-error { padding: 14px; border: 1px solid #d88; border-radius: 8px; color: #8a2020; background: #fff4f4; }
+    main { max-width: 900px; margin: 0 auto; }
+    @media print { .screen-toolbar { display: none !important; } }
+    @media screen {
+      body { padding: 0 24px; }
+      main { margin: 24px auto; }
+      .image-attachment-page { height: auto; min-height: 240px; }
+      .attachment-image { max-height: 70vh; }
+      .pdf-attachment-page canvas { width: min(100%, 760px); }
+      #print-error { margin: 20px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen-toolbar">
+    <div>
+      <strong>Impressão do formulário</strong>
+      <span id="print-status">Conectando ao formulário...</span>
+    </div>
+    <button type="button" id="print-action" disabled>Preparando...</button>
+  </div>
+  <main>
+    <header>
+      <small>DESPACHANTE PASTOR · FORMULÁRIO DE VISTO</small>
+      <h1 id="document-title">Formulário de visto</h1>
+      <p id="document-meta"></p>
+    </header>
+    <div id="form-root"></div>
+    <div id="attachment-root"></div>
+    <div id="print-error" hidden></div>
+    <footer id="document-footer"></footer>
+  </main>
+  <script type="module" src="/interno-print.js"></script>
+</body>
+</html>
