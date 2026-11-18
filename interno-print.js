@@ -154,21 +154,42 @@ async function receivePrintPayload(data) {
   }
 }
 
-window.addEventListener("message", (event) => {
-  if (event.source !== window.opener) return;
-  if (event.origin !== window.location.origin) return;
-  if (event.data?.type !== "despachante-pastor:print-payload") return;
-  receivePrintPayload(event.data.payload || {});
-});
+function showPrintError(message) {
+  printError.hidden = false;
+  printError.textContent = message;
+  printStatus.textContent = "Não foi possível preparar a impressão.";
+  printButton.disabled = true;
+}
 
-if (window.opener) {
-  window.opener.postMessage({ type: "despachante-pastor:print-ready" }, window.location.origin);
-  window.setTimeout(() => {
-    if (payloadReceived) return;
-    printStatus.textContent = "A conexão com a área interna não foi estabelecida.";
-    printError.hidden = false;
-    printError.textContent = "Feche esta janela e clique em Imprimir novamente pela área interna.";
-  }, 15000);
-} else {
-  printStatus.textContent = "Abra a impressão pela área interna do sistema.";
+function decodePrintPayload() {
+  const hash = window.location.hash.slice(1);
+  const params = new URLSearchParams(hash);
+  const encoded = params.get("payload");
+
+  // Remove os dados pessoais da barra de endereço e do histórico antes de renderizar.
+  window.history.replaceState(null, "", window.location.pathname + window.location.search);
+
+  if (!encoded) throw new Error("Os dados do formulário não chegaram à página de impressão. Feche esta janela e tente novamente.");
+
+  const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const payload = JSON.parse(new TextDecoder().decode(bytes));
+
+  if (!payload || !Array.isArray(payload.sections) || !payload.sections.length) {
+    throw new Error("O formulário chegou sem respostas para imprimir.");
+  }
+  if (!Array.isArray(payload.attachments)) payload.attachments = [];
+  return payload;
+}
+
+try {
+  const payload = decodePrintPayload();
+  // A página de impressão não precisa manter referência à área interna.
+  window.opener = null;
+  receivePrintPayload(payload);
+} catch (error) {
+  console.error("Falha ao receber formulário para impressão:", error);
+  showPrintError(error && error.message ? error.message : "Não foi possível receber os dados do formulário.");
 }
