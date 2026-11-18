@@ -10,6 +10,9 @@ const state = {
   currentStep: 0,
   saveTimer: null,
   saving: false,
+  saveQueue: Promise.resolve(),
+  saveRevision: 0,
+  lastSavedRevision: 0,
   reviewing: false,
   submitting: false,
   uploading: false,
@@ -252,7 +255,11 @@ function renderProgress() {
   progressRoot.querySelectorAll('.progress-step.done').forEach((button) => {
     button.addEventListener('click', async () => {
       collectVisibleData();
-      await saveDraft(false);
+      const saved = await saveDraft(false);
+      if (!saved) {
+        alert('Não foi possível salvar suas respostas. Verifique a conexão antes de mudar de etapa.');
+        return;
+      }
       state.currentStep = Number(button.dataset.step);
       renderStep();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -379,47 +386,97 @@ function setSaveState(type, text) {
 }
 
 function scheduleSave() {
+  if (!state.application) return;
   collectVisibleData();
+  pruneHiddenFields();
   setSaveState('saving', 'Salvando...');
   window.clearTimeout(state.saveTimer);
-  state.saveTimer = window.setTimeout(() => saveDraft(), 700);
+  state.saveTimer = window.setTimeout(() => {
+    state.saveTimer = null;
+    saveDraft(true).catch((error) => {
+      console.error('Falha inesperada no salvamento automático:', error);
+      setSaveState('error', 'Falha ao salvar. Tente novamente.');
+    });
+  }, 800);
 }
 
-// Remove respostas de campos que ficaram ocultos (ex.: curso, depois de responder "Não")
+// Remove respostas de campos que ficaram ocultos (ex.: curso, depois de responder "Não").
 function pruneHiddenFields() {
-  for (let pass = 0; pass < 3; pass++) {
+  for (let pass = 0; pass < steps.length; pass += 1) {
     steps.forEach((step) => step.fields.forEach((field) => {
-      if (field.showIf && !isFieldVisible(field) && field.type !== 'file' && state.data[field.name] !== undefined && state.data[field.name] !== '' && state.data[field.name] !== false) {
+      if (
+        field.showIf &&
+        !isFieldVisible(field) &&
+        field.type !== 'file' &&
+        state.data[field.name] !== undefined &&
+        state.data[field.name] !== '' &&
+        state.data[field.name] !== false
+      ) {
         delete state.data[field.name];
       }
     }));
   }
 }
 
+function cloneFormData(value) {
+  return JSON.parse(JSON.stringify(value || {}));
+}
+
 async function saveDraft(showState = true) {
-  if (!state.application) return false;
-  if (state.saving) {
-    await new Promise(resolve => setTimeout(resolve, 120));
-    return saveDraft(showState);
-  }
+  if (!state.application || !state.user) return false;
+
+  window.clearTimeout(state.saveTimer);
+  state.saveTimer = null;
   collectVisibleData();
   pruneHiddenFields();
-  state.saving = true;
+
+  const revision = ++state.saveRevision;
+  const formDataSnapshot = cloneFormData(state.data);
+  const stepSnapshot = state.currentStep;
+
   if (showState) setSaveState('saving', 'Salvando...');
 
-  const { error } = await sb
-    .from('visa_applications')
-    .update({ form_data: state.data, current_step: state.currentStep })
-    .eq('id', state.application.id);
+  const runSave = async () => {
+    state.saving = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
 
-  state.saving = false;
-  if (error) {
-    setSaveState('', 'Falha ao salvar');
-    console.error(error);
-    return false;
-  }
-  setSaveState('saved', 'Progresso salvo');
-  return true;
+    try {
+      const { data, error } = await sb
+        .from('visa_applications')
+        .update({ form_data: formDataSnapshot, current_step: stepSnapshot })
+        .eq('id', state.application.id)
+        .eq('user_id', state.user.id)
+        .eq('status', 'draft')
+        .select('id,updated_at')
+        .maybeSingle()
+        .abortSignal(controller.signal);
+
+      if (error) throw error;
+      if (!data?.id) {
+        throw new Error('O servidor não confirmou a gravação deste rascunho. Atualize a página e confira se a solicitação ainda está em andamento.');
+      }
+
+      state.lastSavedRevision = revision;
+      if (revision === state.saveRevision) setSaveState('saved', 'Progresso salvo');
+      return true;
+    } catch (error) {
+      const saveError = controller.signal.aborted
+        ? new Error('O salvamento demorou mais de 15 segundos. Verifique sua conexão e tente novamente.')
+        : error;
+      console.error('Falha ao salvar o formulário de visto:', saveError);
+      if (revision === state.saveRevision) setSaveState('error', 'Falha ao salvar. Tente novamente.');
+      return false;
+    } finally {
+      window.clearTimeout(timeoutId);
+      state.saving = false;
+    }
+  };
+
+  // Serializa as gravações e mantém a última versão digitada como a mais recente.
+  const pendingSave = state.saveQueue.then(runSave, runSave);
+  state.saveQueue = pendingSave.then(() => undefined, () => undefined);
+  return pendingSave;
 }
 
 const SHARED_FAMILY_FIELDS = [
@@ -499,20 +556,29 @@ async function submitApplication() {
     nextButton.disabled = false;
     return;
   }
-  const { error } = await sb
-    .from('visa_applications')
-    .update({
-      form_data: state.data,
-      current_step: state.currentStep,
-      status: 'submitted',
-      submitted_at: new Date().toISOString(),
-    })
-    .eq('id', state.application.id);
+  try {
+    const { data, error } = await sb
+      .from('visa_applications')
+      .update({
+        form_data: cloneFormData(state.data),
+        current_step: state.currentStep,
+        status: 'submitted',
+        submitted_at: new Date().toISOString(),
+      })
+      .eq('id', state.application.id)
+      .eq('user_id', state.user.id)
+      .eq('status', 'draft')
+      .select('id,submitted_at')
+      .maybeSingle();
 
-  if (error) {
-    console.error(error);
+    if (error) throw error;
+    if (!data?.id) throw new Error('O servidor não confirmou o envio. O questionário continua como rascunho. Atualize e tente novamente.');
+
+    state.application.status = 'submitted';
+  } catch (error) {
+    console.error('Falha ao enviar o formulário de visto:', error);
     await window.PastorLoader?.hide?.(550);
-    alert((error.message ? error.message + '\n\n' : '') + 'Seu progresso continua salvo. Corrija o ponto indicado e tente novamente.');
+    alert((error?.message ? error.message + '\n\n' : '') + 'Seu progresso continua salvo. Corrija o ponto indicado e tente novamente.');
     nextButton.disabled = false;
     nextButton.textContent = 'Confirmar e enviar';
     return;
@@ -585,7 +651,11 @@ prevButton.addEventListener('click', async () => {
     return;
   }
   collectVisibleData();
-  await saveDraft(false);
+  const saved = await saveDraft(false);
+  if (!saved) {
+    alert('Não foi possível salvar suas respostas. Verifique a conexão antes de voltar para outra etapa.');
+    return;
+  }
   state.currentStep = Math.max(0, state.currentStep - 1);
   renderStep();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -596,7 +666,11 @@ window.__beforeSessionExpire = async () => { collectVisibleData(); await saveDra
 
 document.querySelector('#logout-button').addEventListener('click', async () => {
   collectVisibleData();
-  await saveDraft(false);
+  const saved = await saveDraft(false);
+  if (!saved) {
+    alert('Não foi possível confirmar o salvamento. Permaneça nesta página e tente novamente antes de sair.');
+    return;
+  }
   await sb.auth.signOut();
   window.location.href = './login.html';
 });
@@ -609,10 +683,18 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
       return;
     }
 
+    if (!sb) throw new Error('A conexão com o banco de dados não foi inicializada.');
+    if (!Array.isArray(steps) || !steps.length) throw new Error('A estrutura do questionário não foi carregada. Atualize a página e tente novamente.');
+
     state.user = session.user;
     userEmail.textContent = session.user.email || '';
     state.application = await ensureApplication();
-    state.data = state.application.form_data || {};
+    const storedFormData = state.application.form_data;
+    state.data = storedFormData && typeof storedFormData === 'object' && !Array.isArray(storedFormData)
+      ? { ...storedFormData }
+      : typeof storedFormData === 'string'
+        ? (() => { try { const parsed = JSON.parse(storedFormData); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}; } catch { return {}; } })()
+        : {};
     const applicationName = state.data.full_name || state.data.applicant_name || 'Titular';
     const applicantRelation = state.data.applicant_relationship || 'Titular';
     const applicationSubtitle = document.querySelector('.application-title small');
@@ -622,7 +704,7 @@ document.querySelector('#logout-button').addEventListener('click', async () => {
     loading.hidden = true;
     app.hidden = false;
     renderStep();
-    setSaveState('saved', 'Progresso salvo');
+    setSaveState('saved', 'Dados carregados');
     await window.PastorLoader?.hide?.(550);
   } catch (error) {
     console.error(error);
