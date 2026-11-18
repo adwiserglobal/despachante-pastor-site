@@ -405,14 +405,29 @@ function humanValue(value) {
   return value == null || value === '' ? '—' : String(value);
 }
 
+function normalizeVisaFormData(value) {
+  let data = value;
+  if (typeof data === 'string') {
+    try { data = JSON.parse(data); } catch { data = {}; }
+  }
+  return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+
 async function openVisa(row) {
   try {
     const { row: detail, info_requests: infoRequests = [] } = await api('get_visa', { id: row.id });
-    detailTitle.textContent = detail?.form_data?.full_name || row.applicant_name || 'Solicitação de visto';
-    detailMeta.textContent = `${detail.form_data?.applicant_relationship || 'Titular'} • ${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
+    if (!detail?.id) throw new Error('O servidor não retornou os dados desta solicitação.');
+
+    const formData = normalizeVisaFormData(detail.form_data);
+    const applicantName = formData.full_name || formData.applicant_name || row.applicant_name || 'Solicitação de visto';
+    detailTitle.textContent = applicantName;
+    detailMeta.textContent = `${formData.applicant_relationship || 'Titular'} • ${labelStatus(detail.status)} • Atualizado em ${fmtDate(detail.updated_at || detail.created_at)}`;
     detailContent.replaceChildren();
 
-    const sections = buildVisaSections(detail.form_data || {}, fieldLabels);
+    const sections = buildVisaSections(formData, fieldLabels);
+    if (!sections.length) {
+      throw new Error('Este registro não contém respostas disponíveis para exibição.');
+    }
     const exportData = { title: detailTitle.textContent, meta: detailMeta.textContent, sections };
 
     const toolbar = document.createElement('div');
@@ -451,12 +466,12 @@ async function openVisa(row) {
         try {
           const fileItems = sections
             .flatMap((group) => group.items)
-            .filter((item) => item.isFile && item.hasFile && detail.form_data?.[item.key]);
+            .filter((item) => item.isFile && item.hasFile && formData[item.key]);
 
           const attachments = await Promise.all(fileItems.map(async (item) => {
             const { url } = await api('get_visa_document', { id: detail.id, field: item.key });
             if (!url) throw new Error(`Não foi possível acessar o anexo: ${item.label}.`);
-            const storagePath = String(detail.form_data[item.key]);
+            const storagePath = String(formData[item.key]);
             const extension = storagePath.split('.').pop().split('?')[0].toLowerCase();
             return {
               label: item.label,
@@ -486,7 +501,8 @@ async function openVisa(row) {
       grid.className = 'visa-data-grid';
       group.items.forEach((entry) => {
         const item = document.createElement('div');
-        item.className = `visa-data-item${entry.value.length > 100 ? ' full' : ''}`;
+        const displayValue = String(entry.value ?? '—');
+        item.className = `visa-data-item${displayValue.length > 100 ? ' full' : ''}`;
         item.appendChild(createText('small', entry.label));
         if (entry.hasFile) {
           const button = document.createElement('button');
@@ -508,7 +524,7 @@ async function openVisa(row) {
           });
           item.appendChild(button);
         } else {
-          item.appendChild(createText('strong', entry.value));
+          item.appendChild(createText('strong', displayValue));
         }
         grid.appendChild(item);
       });
