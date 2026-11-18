@@ -458,9 +458,6 @@ async function openVisa(row) {
           return;
         }
 
-        printWindow.document.open();
-        printWindow.document.write('<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Preparando impressão</title><body style="font:14px Arial,sans-serif;padding:32px;color:#14233b">Preparando formulário e anexos para impressão...</body></html>');
-        printWindow.document.close();
         exportButton.disabled = true;
 
         try {
