@@ -21,44 +21,82 @@ function fieldVisible(field, data) {
 
 // Agrupa as respostas por etapa, seguindo a sequência de preenchimento do cliente.
 export function buildVisaSections(formData = {}, fallbackLabels = {}) {
-  const steps = window.VISA_STEPS || [];
+  let data = formData;
+  if (typeof data === 'string') {
+    try {
+      data = JSON.parse(data);
+    } catch {
+      data = {};
+    }
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
+
+  const steps = Array.isArray(window.VISA_STEPS)
+    ? window.VISA_STEPS.filter((step) => step && Array.isArray(step.fields))
+    : [];
   const known = new Set();
   const sections = [];
 
   steps.forEach((step) => {
     const items = [];
     step.fields.forEach((field) => {
+      if (!field || typeof field.name !== 'string') return;
       known.add(field.name);
-      const value = formData[field.name];
-      if (!fieldVisible(field, formData) && isEmpty(value)) return;
+      const value = data[field.name];
+      if (!fieldVisible(field, data) && isEmpty(value)) return;
+
       const isFile = field.type === 'file' || FILE_FIELDS.has(field.name);
       items.push({
         key: field.name,
-        label: field.label,
+        label: field.label || fallbackLabels[field.name] || field.name.replaceAll('_', ' '),
         isFile,
-        hasFile: isFile && !!value,
-        value: isFile ? (value ? 'Documento anexado' : 'Não anexado') : (field.type === 'checkbox' ? (value ? 'Aceita' : 'Não aceita') : humanValue(value)),
+        hasFile: isFile && typeof value === 'string' && Boolean(value),
+        value: isFile
+          ? (value ? 'Documento anexado' : 'Não anexado')
+          : (field.type === 'checkbox' ? (value ? 'Aceita' : 'Não aceita') : humanValue(value)),
       });
     });
-    if (items.length) sections.push({ title: step.title, items });
+
+    if (items.length) sections.push({ title: step.title || 'Informações', items });
   });
 
-  const extra = Object.keys(formData).filter((key) => !known.has(key) && !isEmpty(formData[key]));
+  const extra = Object.keys(data).filter((key) => !known.has(key) && !isEmpty(data[key]));
   if (extra.length) {
     sections.push({
-      title: 'Outras informações',
-      items: extra.map((key) => ({
-        key,
-        label: fallbackLabels[key] || key.replaceAll('_', ' '),
-        isFile: FILE_FIELDS.has(key),
-        hasFile: FILE_FIELDS.has(key) && !!formData[key],
-        value: FILE_FIELDS.has(key) ? 'Documento anexado' : humanValue(formData[key]),
-      })),
+      title: steps.length ? 'Outras informações' : 'Dados do formulário',
+      items: extra.map((key) => {
+        const isFile = FILE_FIELDS.has(key);
+        return {
+          key,
+          label: fallbackLabels[key] || key.replaceAll('_', ' '),
+          isFile,
+          hasFile: isFile && typeof data[key] === 'string' && Boolean(data[key]),
+          value: isFile ? 'Documento anexado' : humanValue(data[key]),
+        };
+      }),
     });
   }
+
+  // Se o esquema não estiver carregado, nunca devolva um formulário em branco
+  // quando o registro realmente contém respostas.
+  if (!sections.length && Object.keys(data).length) {
+    sections.push({
+      title: 'Dados do formulário',
+      items: Object.entries(data).map(([key, value]) => {
+        const isFile = FILE_FIELDS.has(key);
+        return {
+          key,
+          label: fallbackLabels[key] || key.replaceAll('_', ' '),
+          isFile,
+          hasFile: isFile && typeof value === 'string' && Boolean(value),
+          value: isFile ? (value ? 'Documento anexado' : 'Não anexado') : humanValue(value),
+        };
+      }),
+    });
+  }
+
   return sections;
 }
-
 const esc = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function slug(text) {
