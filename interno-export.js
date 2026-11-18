@@ -104,34 +104,34 @@ function slug(text) {
 }
 
 // ---------- PDF (via impressão do navegador: "Salvar como PDF") ----------
+function encodePrintPayload(payload) {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let binary = '';
+  const chunkSize = 0x8000;
+
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+
+  return btoa(binary)
+    .replace(/\\+/g, '-')
+    .replace(/\\//g, '_')
+    .replace(/=+$/g, '');
+}
+
 export function exportVisaPdf(options) {
   const { title, meta, sections, attachments = [] } = options;
   const popup = options.popup || window.open('', '_blank');
   if (!popup) throw new Error('Permita pop-ups para imprimir o formulário.');
 
-  const payload = {
-    title,
-    meta,
-    sections,
-    attachments,
-  };
+  const payload = { title, meta, sections, attachments };
+  const encoded = encodePrintPayload(payload);
+  const printUrl = new URL('/interno-print.html', window.location.origin);
 
-  // A prévia é servida como uma página própria do site. Isso evita que a CSP
-  // rígida da área interna bloqueie scripts escritos dinamicamente em about:blank.
-  const onPrintReady = (event) => {
-    if (event.source !== popup) return;
-    if (event.origin !== window.location.origin) return;
-    if (event.data?.type !== 'despachante-pastor:print-ready') return;
-
-    window.removeEventListener('message', onPrintReady);
-    popup.postMessage({
-      type: 'despachante-pastor:print-payload',
-      payload,
-    }, window.location.origin);
-  };
-
-  window.addEventListener('message', onPrintReady);
-  popup.location.replace(new URL('/interno-print.html', window.location.origin).href);
+  // O fragmento não é enviado em requisições HTTP. A página de impressão o
+  // consome e apaga imediatamente, sem depender de window.opener/postMessage.
+  printUrl.hash = 'payload=' + encoded;
+  popup.location.replace(printUrl.href);
 }
 
 // ---------- DOCX ----------
