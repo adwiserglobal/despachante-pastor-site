@@ -166,7 +166,13 @@ export default async function handler(req, res) {
   body = body && typeof body === 'object' ? body : {};
 
   const action = String(body.action || '');
-  const sb = getSupabaseAdmin();
+  let sb;
+  try {
+    sb = getSupabaseAdmin();
+  } catch (error) {
+    console.error('Falha ao inicializar o acesso interno ao Supabase:', error?.message || error);
+    return json(res, 500, { error: 'O banco de dados interno não está configurado corretamente.' });
+  }
 
   try {
     if (action === 'whoami') {
@@ -222,7 +228,7 @@ export default async function handler(req, res) {
         created_at: row.created_at,
         updated_at: row.updated_at,
         submitted_at: row.submitted_at,
-        applicant_name: row.form_data?.full_name || '',
+        applicant_name: row.form_data?.full_name || row.form_data?.applicant_name || '',
         applicant_email: row.form_data?.email || '',
       }));
 
@@ -261,7 +267,7 @@ export default async function handler(req, res) {
       if(typeof path !== 'string' || !path.startsWith(permittedPrefix)) {
         return json(res,404,{error:'Documento não encontrado.'});
       }
-      const {data,error} = await sb.storage.from('visa-documents').createSignedUrl(path,90);
+      const {data,error} = await sb.storage.from('visa-documents').createSignedUrl(path,600);
       if(error || !data?.signedUrl) return json(res,404,{error:'Não foi possível acessar este documento.'});
       await audit(sb,user,'view_document','visa_applications',id);
       return json(res,200,{url:data.signedUrl});
@@ -319,7 +325,7 @@ export default async function handler(req, res) {
       const path = typeof file === 'string' ? file : file?.path;
       const prefix = request.user_id + '/' + request.application_id + '/info_reply/';
       if (typeof path !== 'string' || !path.startsWith(prefix)) return json(res, 404, { error: 'Arquivo não encontrado.' });
-      const { data, error } = await sb.storage.from('visa-documents').createSignedUrl(path, 90);
+      const { data, error } = await sb.storage.from('visa-documents').createSignedUrl(path, 600);
       if (error || !data?.signedUrl) return json(res, 404, { error: 'Não foi possível acessar este arquivo.' });
       await audit(sb, user, 'view_document', 'visa_info_requests', requestId);
       return json(res, 200, { url: data.signedUrl });
