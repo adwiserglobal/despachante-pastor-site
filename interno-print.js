@@ -140,10 +140,22 @@ async function receivePrintPayload(data) {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
     printStatus.textContent = attachments.length
-      ? "Formulário e " + attachments.length + " anexo(s) prontos."
-      : "Formulário pronto para impressão.";
-    printButton.textContent = "Imprimir formulário e anexos";
+      ? "Formulário e " + attachments.length + " anexo(s) prontos. Abrindo a impressão..."
+      : "Formulário pronto. Abrindo a impressão.";
+    printButton.textContent = "Imprimir novamente";
     printButton.disabled = false;
+
+    // O clique original já abriu esta janela. Assim que tudo estiver pronto,
+    // abrimos a caixa nativa de impressão sem exigir um segundo clique.
+    window.setTimeout(() => {
+      try {
+        window.focus();
+        window.print();
+      } catch (printError) {
+        console.error("Não foi possível abrir a caixa de impressão automaticamente:", printError);
+        printStatus.textContent = "Tudo pronto. Clique em Imprimir novamente.";
+      }
+    }, 300);
   } catch (error) {
     console.error("Falha ao preparar impressão:", error);
     printError.hidden = false;
