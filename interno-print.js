@@ -148,9 +148,11 @@ async function receivePrintPayload(data) {
     await renderAttachments(attachments);
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
-    printStatus.textContent = attachments.length
-      ? "Formulário e " + attachments.length + " anexo(s) prontos. Abrindo a impressão..."
-      : "Formulário pronto. Abrindo a impressão.";
+    printStatus.textContent = attachmentsOnly
+      ? attachments.length + " documento(s) pronto(s). Abrindo a impressão..."
+      : (attachments.length
+        ? "Formulário e " + attachments.length + " anexo(s) prontos. Abrindo a impressão..."
+        : "Formulário pronto. Abrindo a impressão.");
     printButton.textContent = "Imprimir novamente";
     printButton.disabled = false;
 
