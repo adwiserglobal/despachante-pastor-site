@@ -109,7 +109,7 @@ function inputFor(field) {
     const extra = numericDate
       ? 'inputmode="numeric" maxlength="10" placeholder="DD/MM/AAAA"'
       : field.name === 'cpf' ? 'inputmode="numeric" maxlength="14" placeholder="000.000.000-00"'
-      : field.name === 'passport_number' ? 'maxlength="24" autocapitalize="characters"'
+      : field.name === 'passport_number' ? 'type="text" inputmode="text" maxlength="24" autocapitalize="characters" spellcheck="false" autocomplete="off"'
       : ['primary_phone','secondary_phone','business_phone','payer_phone','employer_phone'].includes(field.name)
         ? 'inputmode="tel" maxlength="19"'
       : field.name === 'monthly_income' ? 'inputmode="decimal" placeholder="Ex.: 5.000,00"'
@@ -117,7 +117,8 @@ function inputFor(field) {
       : field.name === 'rg' ? 'inputmode="numeric" maxlength="14" autocapitalize="characters"'
       : field.name === 'previous_visa_number' ? 'inputmode="numeric" maxlength="8"'
       : field.name === 'employer_school' ? 'maxlength="160"' : '';
-    control = `<input name="${field.name}" type="${field.type || 'text'}" value="${escapeHtml(value)}" ${extra} ${req} ${autocomplete} ${placeholder}>`;
+    const inputType = field.name === 'passport_number' ? 'text' : (field.type || 'text');
+    control = `<input name="${field.name}" type="${inputType}" value="${escapeHtml(value)}" ${extra} ${req} ${autocomplete} ${placeholder}>`;
   }
 
   return `<div class="field-group"><label>${escapeHtml(field.label)}${mark}</label>${hint}${control}</div>`;
