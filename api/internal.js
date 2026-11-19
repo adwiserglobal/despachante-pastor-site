@@ -220,7 +220,7 @@ export default async function handler(req, res) {
       (requestRows || []).forEach((r) => { if (!latestRequest.has(r.application_id)) latestRequest.set(r.application_id, r.status); });
 
       const searchableFields = [
-        'cpf', 'rg', 'passport_number', 'previous_visa_number', 'us_ssn',
+        'cpf', 'rg', 'passport_number', 'previous_visa_number',
         'primary_phone', 'secondary_phone', 'payer_phone', 'employer_phone',
         'employer_school', 'cnpj', 'document_number',
       ];
