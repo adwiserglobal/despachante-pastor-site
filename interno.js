@@ -355,7 +355,8 @@ function normalizeVisaSearch(value) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/[^a-z0-9]/g, '');
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 }
 
 function visaUpdateDateKey(row) {
@@ -380,8 +381,16 @@ function visaMatchesFilters(row) {
       row.applicant_email,
       ...(Array.isArray(row.search_values) ? row.search_values : []),
     ];
-    const matchesSearch = searchableValues.some((value) => normalizeVisaSearch(value).includes(query));
-    if (!matchesSearch) return false;
+    const normalizedValues = searchableValues.map(normalizeVisaSearch).filter(Boolean);
+    const queryTokens = query.split(/\s+/).filter(Boolean);
+    const allTermsMatch = queryTokens.every((token) =>
+      normalizedValues.some((value) => value.includes(token))
+    );
+    const compactQuery = query.replace(/\s/g, '');
+    const compactNumberMatch = normalizedValues.some((value) =>
+      value.replace(/\s/g, '').includes(compactQuery)
+    );
+    if (!allTermsMatch && !compactNumberMatch) return false;
   }
 
   const updatedDate = visaUpdateDateKey(row);
