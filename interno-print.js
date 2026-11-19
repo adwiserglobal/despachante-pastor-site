@@ -128,14 +128,23 @@ async function receivePrintPayload(data) {
   payloadReceived = true;
 
   try {
-    const { title, meta, sections = [], attachments = [] } = data;
-    document.title = (title || "Formulário de visto") + " - Impressão";
+    const { title, meta, sections = [], attachments = [], mode = "all" } = data;
+    const attachmentsOnly = mode === "attachments";
+    if (!attachmentsOnly && !sections.length) throw new Error("O formulário não possui respostas para imprimir.");
+    if (attachmentsOnly && !attachments.length) throw new Error("Não há documentos anexados para imprimir.");
+    document.title = (title || (attachmentsOnly ? "Documentos anexados" : "Formulário de visto")) + " - Impressão";
     document.getElementById("document-title").textContent = title || "Formulário de visto";
     document.getElementById("document-meta").textContent = meta || "";
     document.getElementById("document-footer").textContent =
       "Documento gerado pela área interna em " + new Date().toLocaleString("pt-BR");
 
-    renderForm(sections);
+    if (attachmentsOnly) {
+      formRoot.hidden = true;
+      attachmentRoot.classList.add("attachments-only");
+    } else {
+      formRoot.hidden = false;
+      renderForm(sections);
+    }
     await renderAttachments(attachments);
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
@@ -189,10 +198,15 @@ function decodePrintPayload() {
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   const payload = JSON.parse(new TextDecoder().decode(bytes));
 
-  if (!payload || !Array.isArray(payload.sections) || !payload.sections.length) {
-    throw new Error("O formulário chegou sem respostas para imprimir.");
+  if (!payload || !Array.isArray(payload.sections)) {
+    throw new Error("Os dados de impressão chegaram em um formato inválido.");
   }
   if (!Array.isArray(payload.attachments)) payload.attachments = [];
+  if (payload.mode === "attachments" ? !payload.attachments.length : !payload.sections.length) {
+    throw new Error(payload.mode === "attachments"
+      ? "Não há documentos anexados para imprimir."
+      : "O formulário chegou sem respostas para imprimir.");
+  }
   return payload;
 }
 
