@@ -219,18 +219,41 @@ export default async function handler(req, res) {
       const latestRequest = new Map();
       (requestRows || []).forEach((r) => { if (!latestRequest.has(r.application_id)) latestRequest.set(r.application_id, r.status); });
 
-      const rows = (data || []).map((row) => ({
-        info_request: latestRequest.get(row.id) || null,
-        id: row.id,
-        country: row.country,
-        status: row.status,
-        current_step: row.current_step,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        submitted_at: row.submitted_at,
-        applicant_name: row.form_data?.full_name || row.form_data?.applicant_name || '',
-        applicant_email: row.form_data?.email || '',
-      }));
+      const searchableFields = [
+        'cpf', 'rg', 'passport_number', 'previous_visa_number', 'us_ssn',
+        'primary_phone', 'secondary_phone', 'payer_phone', 'employer_phone',
+        'employer_school', 'cnpj', 'document_number',
+      ];
+      const rows = (data || []).map((row) => {
+        let formData = row.form_data;
+        if (typeof formData === 'string') {
+          try { formData = JSON.parse(formData); } catch { formData = {}; }
+        }
+        if (!formData || typeof formData !== 'object' || Array.isArray(formData)) formData = {};
+        const applicantName = formData.full_name || formData.applicant_name || '';
+        const applicantEmail = formData.email || '';
+        const searchValues = [
+          row.id,
+          applicantName,
+          applicantEmail,
+          ...searchableFields.map((field) => formData[field]),
+        ].filter((value) => value !== undefined && value !== null && String(value).trim() !== '')
+          .map((value) => String(value));
+
+        return {
+          info_request: latestRequest.get(row.id) || null,
+          id: row.id,
+          country: row.country,
+          status: row.status,
+          current_step: row.current_step,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          submitted_at: row.submitted_at,
+          applicant_name: applicantName,
+          applicant_email: applicantEmail,
+          search_values: searchValues,
+        };
+      });
 
       await audit(sb, user, 'list', 'visa_applications');
       return json(res, 200, { rows });

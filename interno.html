@@ -67,6 +67,22 @@
           <div class="internal-stats" id="visa-stats"></div>
           <div class="internal-panel">
             <div class="panel-head"><div><h2>Formulários de visto</h2><p>Abra um registro para consultar as informações enviadas pelo solicitante.</p></div></div>
+            <div class="visa-filters" role="search" aria-label="Filtros de formulários de visto">
+              <label class="visa-filter-control visa-search-control">
+                <span>Buscar formulário</span>
+                <input id="visa-search" type="search" placeholder="Nome, e-mail, CPF, RG, passaporte..." autocomplete="off">
+              </label>
+              <label class="visa-filter-control">
+                <span>Atualizado a partir de</span>
+                <input id="visa-date-from" type="date">
+              </label>
+              <label class="visa-filter-control">
+                <span>Atualizado até</span>
+                <input id="visa-date-to" type="date">
+              </label>
+              <button id="visa-clear-filters" class="visa-filter-clear" type="button">Limpar filtros</button>
+              <p id="visa-filter-summary" class="visa-filter-summary" aria-live="polite">Exibindo todos os formulários.</p>
+            </div>
             <div class="internal-table-wrap">
               <table class="internal-table">
                 <thead><tr><th>Atualizado</th><th>Solicitante</th><th>País</th><th>Etapa</th><th>Status</th><th></th></tr></thead>

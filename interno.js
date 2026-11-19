@@ -49,6 +49,11 @@ const contactStats = document.querySelector('#contact-stats');
 const visasBody = document.querySelector('#visas-table-body');
 const visasEmpty = document.querySelector('#visas-empty');
 const visaStats = document.querySelector('#visa-stats');
+const visaSearchInput = document.querySelector('#visa-search');
+const visaDateFrom = document.querySelector('#visa-date-from');
+const visaDateTo = document.querySelector('#visa-date-to');
+const visaFilterSummary = document.querySelector('#visa-filter-summary');
+const visaClearFilters = document.querySelector('#visa-clear-filters');
 const detailDialog = document.querySelector('#visa-detail-dialog');
 const detailTitle = document.querySelector('#visa-detail-title');
 const detailMeta = document.querySelector('#visa-detail-meta');
@@ -194,6 +199,16 @@ logoutButton.addEventListener('click', async () => {
 
 refreshButton.addEventListener('click', loadAllData);
 
+visaSearchInput?.addEventListener('input', renderVisas);
+visaDateFrom?.addEventListener('change', renderVisas);
+visaDateTo?.addEventListener('change', renderVisas);
+visaClearFilters?.addEventListener('click', () => {
+  if (visaSearchInput) visaSearchInput.value = '';
+  if (visaDateFrom) visaDateFrom.value = '';
+  if (visaDateTo) visaDateTo.value = '';
+  renderVisas();
+});
+
 // Atualiza o quadro automaticamente a cada minuto, sem interromper arrastes ou janelas abertas
 setInterval(() => {
   if (document.hidden || !currentUser || loadingData || (kanban && kanban.busy)) return;
@@ -335,16 +350,65 @@ function publishData() {
   }));
 }
 
+function normalizeVisaSearch(value) {
+  return String(value == null ? '' : value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function visaUpdateDateKey(row) {
+  const value = row.updated_at || row.created_at;
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function visaMatchesFilters(row) {
+  const query = normalizeVisaSearch(visaSearchInput?.value);
+  if (query) {
+    const searchableValues = [
+      row.id,
+      row.applicant_name,
+      row.applicant_email,
+      ...(Array.isArray(row.search_values) ? row.search_values : []),
+    ];
+    const matchesSearch = searchableValues.some((value) => normalizeVisaSearch(value).includes(query));
+    if (!matchesSearch) return false;
+  }
+
+  const updatedDate = visaUpdateDateKey(row);
+  const from = visaDateFrom?.value || '';
+  const to = visaDateTo?.value || '';
+  if (from && (!updatedDate || updatedDate < from)) return false;
+  if (to && (!updatedDate || updatedDate > to)) return false;
+  return true;
+}
+
 function renderVisas() {
   visasBody.replaceChildren();
-  visasEmpty.hidden = visaRows.length > 0;
+  const filteredRows = visaRows.filter(visaMatchesFilters);
+  visasEmpty.hidden = filteredRows.length > 0;
+  visasEmpty.textContent = visaRows.length
+    ? 'Nenhum formulário corresponde à busca ou ao período selecionado.'
+    : 'Nenhum formulário de visto encontrado.';
+  if (visaFilterSummary) {
+    visaFilterSummary.textContent = filteredRows.length === visaRows.length
+      ? `Exibindo todos os ${visaRows.length} formulários.`
+      : `Exibindo ${filteredRows.length} de ${visaRows.length} formulários.`;
+  }
   renderStats(visaStats, [
     ['Total de formulários', visaRows.length],
     ['Enviados', visaRows.filter((row) => row.status === 'submitted').length],
     ['Em análise', visaRows.filter((row) => row.status === 'in_review').length],
   ]);
 
-  visaRows.forEach((row) => {
+  filteredRows.forEach((row) => {
     const tr = document.createElement('tr');
     tr.appendChild(createText('td', fmtDate(row.updated_at || row.created_at)));
 
