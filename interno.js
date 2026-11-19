@@ -413,6 +413,44 @@ function normalizeVisaFormData(value) {
   return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
 }
 
+function choosePrintMode() {
+  return new Promise((resolve) => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'info-request-dialog';
+    const content = document.createElement('div');
+    content.className = 'info-request-form';
+    content.append(
+      createText('span', 'OPÇÕES DE IMPRESSÃO'),
+      createText('h2', 'O que deseja imprimir?'),
+      createText('p', 'Escolha se deseja imprimir o formulário completo ou somente os documentos anexados.')
+    );
+    const actions = document.createElement('div');
+    actions.className = 'info-request-actions';
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'detail-button secondary-button';
+    cancel.textContent = 'Cancelar';
+    const attachments = document.createElement('button');
+    attachments.type = 'button';
+    attachments.className = 'detail-button secondary-button';
+    attachments.textContent = 'Somente anexos';
+    const all = document.createElement('button');
+    all.type = 'button';
+    all.className = 'detail-button';
+    all.textContent = 'Formulário completo';
+    actions.append(cancel, attachments, all);
+    content.appendChild(actions);
+    dialog.appendChild(content);
+    document.body.appendChild(dialog);
+    let result = null;
+    cancel.addEventListener('click', () => dialog.close());
+    attachments.addEventListener('click', () => { result = 'attachments'; dialog.close(); });
+    all.addEventListener('click', () => { result = 'all'; dialog.close(); });
+    dialog.addEventListener('close', () => { dialog.remove(); resolve(result); });
+    dialog.showModal();
+  });
+}
+
 async function openVisa(row) {
   try {
     const { row: detail, info_requests: infoRequests = [] } = await api('get_visa', { id: row.id });
@@ -451,7 +489,7 @@ async function openVisa(row) {
           return;
         }
 
-        // Abre a janela durante o clique para evitar bloqueio de pop-up enquanto os anexos carregam.
+        // Abre a janela no gesto do clique para evitar bloqueio do navegador.
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
           window.alert('Permita pop-ups para imprimir o formulário e seus anexos.');
@@ -461,11 +499,19 @@ async function openVisa(row) {
         exportButton.disabled = true;
 
         try {
+          const printMode = action === 'print' ? await choosePrintMode() : 'all';
+          if (!printMode) { printWindow.close(); return; }
           const fileItems = sections
             .flatMap((group) => group.items)
             .filter((item) => item.isFile && item.hasFile && formData[item.key]);
 
-          const attachments = await Promise.all(fileItems.map(async (item) => {
+          const selectedFileItems = fileItems.filter((item) => printMode === 'attachments' || item.isFile);
+          if (printMode === 'attachments' && !selectedFileItems.length) {
+            printWindow.close();
+            window.alert('Este formulário não possui documentos anexados.');
+            return;
+          }
+          const attachments = await Promise.all(selectedFileItems.map(async (item) => {
             const { url } = await api('get_visa_document', { id: detail.id, field: item.key });
             if (!url) throw new Error(`Não foi possível acessar o anexo: ${item.label}.`);
             const storagePath = String(formData[item.key]);
@@ -478,7 +524,14 @@ async function openVisa(row) {
             };
           }));
 
-          exportVisaPdf({ ...exportData, attachments, popup: printWindow });
+          exportVisaPdf({
+            ...exportData,
+            title: printMode === 'attachments' ? 'Documentos anexados' : exportData.title,
+            sections: printMode === 'attachments' ? [] : exportData.sections,
+            mode: printMode,
+            attachments,
+            popup: printWindow,
+          });
         } catch (error) {
           printWindow.close();
           window.alert(error?.message || 'Não foi possível preparar os anexos para impressão.');
