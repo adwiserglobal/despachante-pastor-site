@@ -36,7 +36,19 @@
     .screen-toolbar button:disabled { opacity: .55; cursor: wait; }
     #print-error { padding: 14px; border: 1px solid #d88; border-radius: 8px; color: #8a2020; background: #fff4f4; }
     main { max-width: 900px; margin: 0 auto; }
-    @media print { .screen-toolbar { display: none !important; } }
+    @media print {
+      .screen-toolbar { display: none !important; }
+      body.attachments-only main { max-width: none; margin: 0; }
+      body.attachments-only header,
+      body.attachments-only #document-footer,
+      body.attachments-only .attachments-title { display: none !important; }
+      body.attachments-only #attachment-root { margin: 0; padding: 0; }
+      body.attachments-only .attachment-block { margin: 0; break-inside: avoid; page-break-inside: avoid; }
+      body.attachments-only .attachment-block.next-attachment { break-before: page; page-break-before: always; }
+      body.attachments-only .attachment-label { margin: 0 0 8px; }
+      body.attachments-only .image-attachment-page { height: 245mm; min-height: 0; max-height: 245mm; margin: 0; }
+      body.attachments-only .attachment-image { max-width: 100%; max-height: 245mm; width: auto; height: auto; }
+    }
     @media screen {
       body { padding: 0 24px; }
       main { margin: 24px auto; }

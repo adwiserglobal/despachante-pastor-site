@@ -61,11 +61,13 @@ function renderForm(sections) {
   });
 }
 
-async function renderAttachments(attachments) {
+async function renderAttachments(attachments, attachmentsOnly = false) {
   attachmentRoot.replaceChildren();
   if (!attachments.length) return;
 
-  attachmentRoot.appendChild(makeElement("h2", "attachments-title", "Anexos do formulário"));
+  if (!attachmentsOnly) {
+    attachmentRoot.appendChild(makeElement("h2", "attachments-title", "Anexos do formulário"));
+  }
 
   const pdfAttachments = attachments.filter((item) => item.kind === "pdf");
   let pdfjsLib = null;
@@ -138,14 +140,14 @@ async function receivePrintPayload(data) {
     document.getElementById("document-footer").textContent =
       "Documento gerado pela área interna em " + new Date().toLocaleString("pt-BR");
 
+    document.body.classList.toggle("attachments-only", attachmentsOnly);
     if (attachmentsOnly) {
       formRoot.hidden = true;
-      attachmentRoot.classList.add("attachments-only");
     } else {
       formRoot.hidden = false;
       renderForm(sections);
     }
-    await renderAttachments(attachments);
+    await renderAttachments(attachments, attachmentsOnly);
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
 
     printStatus.textContent = attachmentsOnly

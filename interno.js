@@ -413,6 +413,22 @@ function normalizeVisaFormData(value) {
   return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
 }
 
+function showPrintPreparingPage(popup, mode) {
+  popup.document.title = 'Preparando impressão';
+  const style = popup.document.createElement('style');
+  style.textContent = 'body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f5f7fa;color:#14233b;font:16px Arial,sans-serif}main{max-width:440px;padding:32px;text-align:center}h1{font-size:20px;margin:0 0 10px}p{color:#5b6a80;margin:0}';
+  popup.document.head.appendChild(style);
+  const main = popup.document.createElement('main');
+  const title = popup.document.createElement('h1');
+  title.textContent = 'Preparando sua impressão';
+  const message = popup.document.createElement('p');
+  message.textContent = mode === 'attachments'
+    ? 'Estamos organizando os documentos selecionados.'
+    : 'Estamos organizando o formulário e os documentos.';
+  main.append(title, message);
+  popup.document.body.replaceChildren(main);
+}
+
 function choosePrintMode() {
   return new Promise((resolve) => {
     const dialog = document.createElement('dialog');
@@ -442,11 +458,33 @@ function choosePrintMode() {
     content.appendChild(actions);
     dialog.appendChild(content);
     document.body.appendChild(dialog);
+
     let result = null;
+    const selectMode = (mode) => {
+      // A nova aba só é criada depois da escolha, diretamente no clique da opção.
+      const popup = window.open('', '_blank');
+      if (!popup) {
+        window.alert('Permita pop-ups para abrir a impressão.');
+        return;
+      }
+      try {
+        showPrintPreparingPage(popup, mode);
+      } catch (error) {
+        popup.close();
+        window.alert('Não foi possível abrir a janela de impressão. Tente novamente.');
+        return;
+      }
+      result = { mode, popup };
+      dialog.close();
+    };
+
     cancel.addEventListener('click', () => dialog.close());
-    attachments.addEventListener('click', () => { result = 'attachments'; dialog.close(); });
-    all.addEventListener('click', () => { result = 'all'; dialog.close(); });
-    dialog.addEventListener('close', () => { dialog.remove(); resolve(result); });
+    attachments.addEventListener('click', () => selectMode('attachments'));
+    all.addEventListener('click', () => selectMode('all'));
+    dialog.addEventListener('close', () => {
+      dialog.remove();
+      resolve(result);
+    }, { once: true });
     dialog.showModal();
   });
 }
@@ -489,29 +527,34 @@ async function openVisa(row) {
           return;
         }
 
-        // Abre a janela no gesto do clique para evitar bloqueio do navegador.
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          window.alert('Permita pop-ups para imprimir o formulário e seus anexos.');
-          return;
-        }
-
         exportButton.disabled = true;
+        let printWindow = null;
+        let printMode = 'all';
 
         try {
-          const printMode = action === 'print' ? await choosePrintMode() : 'all';
-          if (!printMode) { printWindow.close(); return; }
+          if (action === 'print') {
+            const choice = await choosePrintMode();
+            if (!choice) return;
+            printMode = choice.mode;
+            printWindow = choice.popup;
+          } else {
+            printWindow = window.open('', '_blank');
+            if (!printWindow) throw new Error('Permita pop-ups para exportar o formulário.');
+            showPrintPreparingPage(printWindow, 'all');
+          }
+
           const fileItems = sections
             .flatMap((group) => group.items)
             .filter((item) => item.isFile && item.hasFile && formData[item.key]);
 
-          const selectedFileItems = fileItems.filter((item) => printMode === 'attachments' || item.isFile);
-          if (printMode === 'attachments' && !selectedFileItems.length) {
+          if (printMode === 'attachments' && !fileItems.length) {
             printWindow.close();
+            printWindow = null;
             window.alert('Este formulário não possui documentos anexados.');
             return;
           }
-          const attachments = await Promise.all(selectedFileItems.map(async (item) => {
+
+          const attachments = await Promise.all(fileItems.map(async (item) => {
             const { url } = await api('get_visa_document', { id: detail.id, field: item.key });
             if (!url) throw new Error(`Não foi possível acessar o anexo: ${item.label}.`);
             const storagePath = String(formData[item.key]);
@@ -533,7 +576,7 @@ async function openVisa(row) {
             popup: printWindow,
           });
         } catch (error) {
-          printWindow.close();
+          if (printWindow && !printWindow.closed) printWindow.close();
           window.alert(error?.message || 'Não foi possível preparar os anexos para impressão.');
         } finally {
           exportButton.disabled = false;
