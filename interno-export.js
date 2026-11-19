@@ -120,11 +120,11 @@ function encodePrintPayload(payload) {
 }
 
 export function exportVisaPdf(options) {
-  const { title, meta, sections, attachments = [] } = options;
+  const { title, meta, sections, attachments = [], mode = 'all' } = options;
   const popup = options.popup || window.open('', '_blank');
   if (!popup) throw new Error('Permita pop-ups para imprimir o formulário.');
 
-  const payload = { title, meta, sections, attachments };
+  const payload = { title, meta, sections, attachments, mode };
   const encoded = encodePrintPayload(payload);
   const printUrl = new URL('/interno-print.html', window.location.origin);
 
