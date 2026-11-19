@@ -374,6 +374,8 @@ function visaMatchesFilters(row) {
   if (query) {
     const searchableValues = [
       row.id,
+      row.country,
+      row.status,
       row.applicant_name,
       row.applicant_email,
       ...(Array.isArray(row.search_values) ? row.search_values : []),
